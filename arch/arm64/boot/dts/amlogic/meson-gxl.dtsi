@@ -315,6 +315,7 @@
 				       "emmc_cmd",
 				       "emmc_clk";
 				function = "emmc";
+				bias-disable;
 			};
 		};
 
@@ -322,6 +323,7 @@
 			mux {
 				groups = "emmc_ds";
 				function = "emmc";
+				bias-disable;
 			};
 		};
 
@@ -368,6 +370,7 @@
 				       "sdcard_cmd",
 				       "sdcard_clk";
 				function = "sdcard";
+				bias-disable;
 			};
 		};
 
@@ -388,6 +391,7 @@
 				       "sdio_cmd",
 				       "sdio_clk";
 				function = "sdio";
+				bias-disable;
 			};
 		};
 
