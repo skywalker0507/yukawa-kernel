@@ -234,6 +234,7 @@
 						groups = "i2c0_sck",
 							 "i2c0_sda";
 						function = "i2c0";
+						bias-disable;
 					};
 				};
 
@@ -242,6 +243,7 @@
 						groups = "i2c1_sck_x",
 							 "i2c1_sda_x";
 						function = "i2c1";
+						bias-disable;
 					};
 				};
 
@@ -250,6 +252,7 @@
 						groups = "i2c1_sck_z",
 							 "i2c1_sda_z";
 						function = "i2c1";
+						bias-disable;
 					};
 				};
 
@@ -258,6 +261,7 @@
 						groups = "i2c2_sck_a",
 							 "i2c2_sda_a";
 						function = "i2c2";
+						bias-disable;
 					};
 				};
 
@@ -266,6 +270,7 @@
 						groups = "i2c2_sck_x",
 							 "i2c2_sda_x";
 						function = "i2c2";
+						bias-disable;
 					};
 				};
 
@@ -274,6 +279,7 @@
 						groups = "i2c3_sda_a6",
 							 "i2c3_sck_a7";
 						function = "i2c3";
+						bias-disable;
 					};
 				};
 
@@ -282,6 +288,7 @@
 						groups = "i2c3_sda_a12",
 							 "i2c3_sck_a13";
 						function = "i2c3";
+						bias-disable;
 					};
 				};
 
@@ -290,6 +297,7 @@
 						groups = "i2c3_sda_a19",
 							 "i2c3_sck_a20";
 						function = "i2c3";
+						bias-disable;
 					};
 				};
 
@@ -336,6 +344,7 @@
 							 "eth_txd2_rgmii",
 							 "eth_txd3_rgmii";
 						function = "eth";
+						bias-disable;
 					};
 				};
 
@@ -356,6 +365,7 @@
 							 "eth_txd2_rgmii",
 							 "eth_txd3_rgmii";
 						function = "eth";
+						bias-disable;
 					};
 				};
 
@@ -371,6 +381,7 @@
 							 "eth_txd0_x",
 							 "eth_txd1_x";
 						function = "eth";
+						bias-disable;
 					};
 				};
 
@@ -386,6 +397,7 @@
 							 "eth_txd0_y",
 							 "eth_txd1_y";
 						function = "eth";
+						bias-disable;
 					};
 				};
 
@@ -393,6 +405,7 @@
 					mux {
 						groups = "mclk_b";
 						function = "mclk_b";
+						bias-disable;
 					};
 				};
 
@@ -400,6 +413,7 @@
 					mux {
 						groups = "mclk_c";
 						function = "mclk_c";
+						bias-disable;
 					};
 				};
 
@@ -407,6 +421,7 @@
 					mux {
 						groups = "pdm_dclk_a14";
 						function = "pdm";
+						bias-disable;
 					};
 				};
 
@@ -414,6 +429,7 @@
 					mux {
 						groups = "pdm_dclk_a19";
 						function = "pdm";
+						bias-disable;
 					};
 				};
 
@@ -421,6 +437,7 @@
 					mux {
 						groups = "pdm_din0";
 						function = "pdm";
+						bias-disable;
 					};
 				};
 
@@ -428,6 +445,7 @@
 					mux {
 						groups = "pdm_din1";
 						function = "pdm";
+						bias-disable;
 					};
 				};
 
@@ -435,6 +453,7 @@
 					mux {
 						groups = "pdm_din2";
 						function = "pdm";
+						bias-disable;
 					};
 				};
 
@@ -442,6 +461,7 @@
 					mux {
 						groups = "pdm_din3";
 						function = "pdm";
+						bias-disable;
 					};
 				};
 
@@ -449,6 +469,7 @@
 					mux {
 						groups = "pwm_a_a";
 						function = "pwm_a";
+						bias-disable;
 					};
 				};
 
@@ -456,6 +477,7 @@
 					mux {
 						groups = "pwm_a_x18";
 						function = "pwm_a";
+						bias-disable;
 					};
 				};
 
@@ -463,6 +485,7 @@
 					mux {
 						groups = "pwm_a_x20";
 						function = "pwm_a";
+						bias-disable;
 					};
 				};
 
@@ -470,6 +493,7 @@
 					mux {
 						groups = "pwm_a_z";
 						function = "pwm_a";
+						bias-disable;
 					};
 				};
 
@@ -477,6 +501,7 @@
 					mux {
 						groups = "pwm_b_a";
 						function = "pwm_b";
+						bias-disable;
 					};
 				};
 
@@ -484,6 +509,7 @@
 					mux {
 						groups = "pwm_b_x";
 						function = "pwm_b";
+						bias-disable;
 					};
 				};
 
@@ -491,6 +517,7 @@
 					mux {
 						groups = "pwm_b_z";
 						function = "pwm_b";
+						bias-disable;
 					};
 				};
 
@@ -498,6 +525,7 @@
 					mux {
 						groups = "pwm_c_a";
 						function = "pwm_c";
+						bias-disable;
 					};
 				};
 
@@ -505,6 +533,7 @@
 					mux {
 						groups = "pwm_c_x10";
 						function = "pwm_c";
+						bias-disable;
 					};
 				};
 
@@ -512,6 +541,7 @@
 					mux {
 						groups = "pwm_c_x17";
 						function = "pwm_c";
+						bias-disable;
 					};
 				};
 
@@ -519,6 +549,7 @@
 					mux {
 						groups = "pwm_d_x11";
 						function = "pwm_d";
+						bias-disable;
 					};
 				};
 
@@ -526,6 +557,7 @@
 					mux {
 						groups = "pwm_d_x16";
 						function = "pwm_d";
+						bias-disable;
 					};
 				};
 
@@ -554,6 +586,7 @@
 					mux {
 						groups = "spdif_in_z";
 						function = "spdif_in";
+						bias-disable;
 					};
 				};
 
@@ -561,6 +594,7 @@
 					mux {
 						groups = "spdif_in_a1";
 						function = "spdif_in";
+						bias-disable;
 					};
 				};
 
@@ -568,6 +602,7 @@
 					mux {
 						groups = "spdif_in_a7";
 						function = "spdif_in";
+						bias-disable;
 					};
 				};
 
@@ -575,6 +610,7 @@
 					mux {
 						groups = "spdif_in_a19";
 						function = "spdif_in";
+						bias-disable;
 					};
 				};
 
@@ -582,6 +618,7 @@
 					mux {
 						groups = "spdif_in_a20";
 						function = "spdif_in";
+						bias-disable;
 					};
 				};
 
@@ -589,6 +626,7 @@
 					mux {
 						groups = "spdif_out_a1";
 						function = "spdif_out";
+						bias-disable;
 					};
 				};
 
@@ -596,6 +634,7 @@
 					mux {
 						groups = "spdif_out_a11";
 						function = "spdif_out";
+						bias-disable;
 					};
 				};
 
@@ -603,6 +642,7 @@
 					mux {
 						groups = "spdif_out_a19";
 						function = "spdif_out";
+						bias-disable;
 					};
 				};
 
@@ -610,6 +650,7 @@
 					mux {
 						groups = "spdif_out_a20";
 						function = "spdif_out";
+						bias-disable;
 					};
 				};
 
@@ -617,6 +658,7 @@
 					mux {
 						groups = "spdif_out_z";
 						function = "spdif_out";
+						bias-disable;
 					};
 				};
 
@@ -626,6 +668,7 @@
 							 "spi0_mosi",
 							 "spi0_clk";
 						function = "spi0";
+						bias-disable;
 					};
 				};
 
@@ -633,6 +676,7 @@
 					mux {
 						groups = "spi0_ss0";
 						function = "spi0";
+						bias-disable;
 					};
 				};
 
@@ -640,6 +684,7 @@
 					mux {
 						groups = "spi0_ss1";
 						function = "spi0";
+						bias-disable;
 					};
 				};
 
@@ -647,6 +692,7 @@
 					mux {
 						groups = "spi0_ss2";
 						function = "spi0";
+						bias-disable;
 					};
 				};
 
@@ -656,6 +702,7 @@
 							 "spi1_mosi_a",
 							 "spi1_clk_a";
 						function = "spi1";
+						bias-disable;
 					};
 				};
 
@@ -663,6 +710,7 @@
 					mux {
 						groups = "spi1_ss0_a";
 						function = "spi1";
+						bias-disable;
 					};
 				};
 
@@ -670,6 +718,7 @@
 					mux {
 						groups = "spi1_ss1";
 						function = "spi1";
+						bias-disable;
 					};
 				};
 
@@ -679,6 +728,7 @@
 							 "spi1_mosi_x",
 							 "spi1_clk_x";
 						function = "spi1";
+						bias-disable;
 					};
 				};
 
@@ -686,6 +736,7 @@
 					mux {
 						groups = "spi1_ss0_x";
 						function = "spi1";
+						bias-disable;
 					};
 				};
 
@@ -693,6 +744,7 @@
 					mux {
 						groups = "tdma_din0";
 						function = "tdma";
+						bias-disable;
 					};
 				};
 
@@ -700,6 +752,7 @@
 					mux {
 						groups = "tdma_dout0_x14";
 						function = "tdma";
+						bias-disable;
 					};
 				};
 
@@ -707,6 +760,7 @@
 					mux {
 						groups = "tdma_dout0_x15";
 						function = "tdma";
+						bias-disable;
 					};
 				};
 
@@ -714,6 +768,7 @@
 					mux {
 						groups = "tdma_dout1";
 						function = "tdma";
+						bias-disable;
 					};
 				};
 
@@ -721,6 +776,7 @@
 					mux {
 						groups = "tdma_din1";
 						function = "tdma";
+						bias-disable;
 					};
 				};
 
@@ -728,6 +784,7 @@
 					mux {
 						groups = "tdma_fs";
 						function = "tdma";
+						bias-disable;
 					};
 				};
 
@@ -735,6 +792,7 @@
 					mux {
 						groups = "tdma_fs_slv";
 						function = "tdma";
+						bias-disable;
 					};
 				};
 
@@ -742,6 +800,7 @@
 					mux {
 						groups = "tdma_sclk";
 						function = "tdma";
+						bias-disable;
 					};
 				};
 
@@ -749,6 +808,7 @@
 					mux {
 						groups = "tdma_sclk_slv";
 						function = "tdma";
+						bias-disable;
 					};
 				};
 
@@ -756,6 +816,7 @@
 					mux {
 						groups = "tdmb_din0";
 						function = "tdmb";
+						bias-disable;
 					};
 				};
 
@@ -763,6 +824,7 @@
 					mux {
 						groups = "tdmb_din1";
 						function = "tdmb";
+						bias-disable;
 					};
 				};
 
@@ -770,6 +832,7 @@
 					mux {
 						groups = "tdmb_din2";
 						function = "tdmb";
+						bias-disable;
 					};
 				};
 
@@ -777,6 +840,7 @@
 					mux {
 						groups = "tdmb_din3";
 						function = "tdmb";
+						bias-disable;
 					};
 				};
 
@@ -784,6 +848,7 @@
 					mux {
 						groups = "tdmb_dout0";
 						function = "tdmb";
+						bias-disable;
 					};
 				};
 
@@ -791,6 +856,7 @@
 					mux {
 						groups = "tdmb_dout1";
 						function = "tdmb";
+						bias-disable;
 					};
 				};
 
@@ -798,6 +864,7 @@
 					mux {
 						groups = "tdmb_dout2";
 						function = "tdmb";
+						bias-disable;
 					};
 				};
 
@@ -805,6 +872,7 @@
 					mux {
 						groups = "tdmb_dout3";
 						function = "tdmb";
+						bias-disable;
 					};
 				};
 
@@ -812,6 +880,7 @@
 					mux {
 						groups = "tdmb_fs";
 						function = "tdmb";
+						bias-disable;
 					};
 				};
 
@@ -819,6 +888,7 @@
 					mux {
 						groups = "tdmb_fs_slv";
 						function = "tdmb";
+						bias-disable;
 					};
 				};
 
@@ -826,6 +896,7 @@
 					mux {
 						groups = "tdmb_sclk";
 						function = "tdmb";
+						bias-disable;
 					};
 				};
 
@@ -833,6 +904,7 @@
 					mux {
 						groups = "tdmb_sclk_slv";
 						function = "tdmb";
+						bias-disable;
 					};
 				};
 
@@ -840,6 +912,7 @@
 					mux {
 						groups = "tdmc_fs";
 						function = "tdmc";
+						bias-disable;
 					};
 				};
 
@@ -847,6 +920,7 @@
 					mux {
 						groups = "tdmc_fs_slv";
 						function = "tdmc";
+						bias-disable;
 					};
 				};
 
@@ -854,6 +928,7 @@
 					mux {
 						groups = "tdmc_sclk";
 						function = "tdmc";
+						bias-disable;
 					};
 				};
 
@@ -861,6 +936,7 @@
 					mux {
 						groups = "tdmc_sclk_slv";
 						function = "tdmc";
+						bias-disable;
 					};
 				};
 
@@ -868,6 +944,7 @@
 					mux {
 						groups = "tdmc_din0";
 						function = "tdmc";
+						bias-disable;
 					};
 				};
 
@@ -875,6 +952,7 @@
 					mux {
 						groups = "tdmc_din1";
 						function = "tdmc";
+						bias-disable;
 					};
 				};
 
@@ -882,6 +960,7 @@
 					mux {
 						groups = "tdmc_din2";
 						function = "tdmc";
+						bias-disable;
 					};
 				};
 
@@ -889,6 +968,7 @@
 					mux {
 						groups = "tdmc_din3";
 						function = "tdmc";
+						bias-disable;
 					};
 				};
 
@@ -896,6 +976,7 @@
 					mux {
 						groups = "tdmc_dout0";
 						function = "tdmc";
+						bias-disable;
 					};
 				};
 
@@ -903,6 +984,7 @@
 					mux {
 						groups = "tdmc_dout1";
 						function = "tdmc";
+						bias-disable;
 					};
 				};
 
@@ -910,6 +992,7 @@
 					mux {
 						groups = "tdmc_dout2";
 						function = "tdmc";
+						bias-disable;
 					};
 				};
 
@@ -917,6 +1000,7 @@
 					mux {
 						groups = "tdmc_dout3";
 						function = "tdmc";
+						bias-disable;
 					};
 				};
 
@@ -925,6 +1009,7 @@
 						groups = "uart_tx_a",
 							 "uart_rx_a";
 						function = "uart_a";
+						bias-disable;
 					};
 				};
 
@@ -933,6 +1018,7 @@
 						groups = "uart_cts_a",
 							 "uart_rts_a";
 						function = "uart_a";
+						bias-disable;
 					};
 				};
 
@@ -941,6 +1027,7 @@
 						groups = "uart_tx_b_x",
 							 "uart_rx_b_x";
 						function = "uart_b";
+						bias-disable;
 					};
 				};
 
@@ -949,6 +1036,7 @@
 						groups = "uart_cts_b_x",
 							 "uart_rts_b_x";
 						function = "uart_b";
+						bias-disable;
 					};
 				};
 
@@ -957,6 +1045,7 @@
 						groups = "uart_tx_b_z",
 							 "uart_rx_b_z";
 						function = "uart_b";
+						bias-disable;
 					};
 				};
 
@@ -965,6 +1054,7 @@
 						groups = "uart_cts_b_z",
 							 "uart_rts_b_z";
 						function = "uart_b";
+						bias-disable;
 					};
 				};
 
@@ -973,6 +1063,7 @@
 						groups = "uart_ao_tx_b_z",
 							 "uart_ao_rx_b_z";
 						function = "uart_ao_b_z";
+						bias-disable;
 					};
 				};
 
@@ -981,6 +1072,7 @@
 						groups = "uart_ao_cts_b_z",
 							 "uart_ao_rts_b_z";
 						function = "uart_ao_b_z";
+						bias-disable;
 					};
 				};
 			};
@@ -1269,6 +1361,7 @@
 					mux {
 						groups = "i2c_ao_sck_4";
 						function = "i2c_ao";
+						bias-disable;
 					};
 				};
 
@@ -1276,6 +1369,7 @@
 					mux {
 						groups = "i2c_ao_sck_8";
 						function = "i2c_ao";
+						bias-disable;
 					};
 				};
 
@@ -1283,6 +1377,7 @@
 					mux {
 						groups = "i2c_ao_sck_10";
 						function = "i2c_ao";
+						bias-disable;
 					};
 				};
 
@@ -1290,6 +1385,7 @@
 					mux {
 						groups = "i2c_ao_sda_5";
 						function = "i2c_ao";
+						bias-disable;
 					};
 				};
 
@@ -1297,6 +1393,7 @@
 					mux {
 						groups = "i2c_ao_sda_9";
 						function = "i2c_ao";
+						bias-disable;
 					};
 				};
 
@@ -1304,6 +1401,7 @@
 					mux {
 						groups = "i2c_ao_sda_11";
 						function = "i2c_ao";
+						bias-disable;
 					};
 				};
 
@@ -1311,6 +1409,7 @@
 					mux {
 						groups = "remote_input_ao";
 						function = "remote_input_ao";
+						bias-disable;
 					};
 				};
 
@@ -1319,6 +1418,7 @@
 						groups = "uart_ao_tx_a",
 							 "uart_ao_rx_a";
 						function = "uart_ao_a";
+						bias-disable;
 					};
 				};
 
@@ -1327,6 +1427,7 @@
 						groups = "uart_ao_cts_a",
 							 "uart_ao_rts_a";
 						function = "uart_ao_a";
+						bias-disable;
 					};
 				};
 
@@ -1335,6 +1436,7 @@
 						groups = "uart_ao_tx_b",
 							 "uart_ao_rx_b";
 						function = "uart_ao_b";
+						bias-disable;
 					};
 				};
 
@@ -1343,6 +1445,7 @@
 						groups = "uart_ao_cts_b",
 							 "uart_ao_rts_b";
 						function = "uart_ao_b";
+						bias-disable;
 					};
 				};
 			};
