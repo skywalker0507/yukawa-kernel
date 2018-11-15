@@ -112,6 +112,8 @@ Board compatible values (alphabetically, grouped by SoC):
 
   - "amlogic,s400" (Meson axg a113d)
 
+  - "amlogic,s420" (Meson axg a113x)
+
   - "amlogic,u200" (Meson g12a s905d2)
 
 Amlogic Meson Firmware registers Interface
