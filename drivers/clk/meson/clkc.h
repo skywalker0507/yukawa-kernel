@@ -95,7 +95,7 @@ struct meson_vid_pll_div_data {
 	struct parm sel;
 };
 
-#define MESON_GATE(_name, _reg, _bit)					\
+#define __MESON_GATE(_name, _reg, _bit, _ops)				\
 struct clk_regmap _name = {						\
 	.data = &(struct clk_regmap_gate_data){				\
 		.offset = (_reg),					\
@@ -103,12 +103,18 @@ struct clk_regmap _name = {						\
 	},								\
 	.hw.init = &(struct clk_init_data) {				\
 		.name = #_name,						\
-		.ops = &clk_regmap_gate_ops,				\
+		.ops = _ops,						\
 		.parent_names = (const char *[]){ "clk81" },		\
 		.num_parents = 1,					\
 		.flags = (CLK_SET_RATE_PARENT | CLK_IGNORE_UNUSED),	\
 	},								\
 };
+
+#define MESON_GATE(_name, _reg, _bit)	\
+	__MESON_GATE(_name, _reg, _bit, &clk_regmap_gate_ops)
+
+#define MESON_GATE_RO(_name, _reg, _bit)	\
+	__MESON_GATE(_name, _reg, _bit, &clk_regmap_gate_ro_ops)
 
 struct meson_clk_dualdiv_param {
 	unsigned int n1;
