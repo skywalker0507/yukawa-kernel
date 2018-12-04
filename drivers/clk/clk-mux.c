@@ -23,8 +23,8 @@
  * parent - parent is adjustable through clk_set_parent
  */
 
-int clk_mux_val_to_index(struct clk_hw *hw, u32 *table, unsigned int flags,
-			 unsigned int val)
+u8 clk_mux_val_to_index(struct clk_hw *hw, u32 *table, unsigned int flags,
+			unsigned int val)
 {
 	int num_parents = clk_hw_get_num_parents(hw);
 
@@ -34,7 +34,7 @@ int clk_mux_val_to_index(struct clk_hw *hw, u32 *table, unsigned int flags,
 		for (i = 0; i < num_parents; i++)
 			if (table[i] == val)
 				return i;
-		return -EINVAL;
+		return num_parents;
 	}
 
 	if (val && (flags & CLK_MUX_INDEX_BIT))
@@ -44,7 +44,7 @@ int clk_mux_val_to_index(struct clk_hw *hw, u32 *table, unsigned int flags,
 		val--;
 
 	if (val >= num_parents)
-		return -EINVAL;
+		return num_parents;
 
 	return val;
 }
