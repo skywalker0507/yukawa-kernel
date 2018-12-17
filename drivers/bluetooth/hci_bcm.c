@@ -231,6 +231,9 @@ static int bcm_gpio_set_power(struct bcm_device *dev, bool powered)
 	if (!powered && !IS_ERR(dev->clk) && dev->clk_enabled)
 		clk_disable_unprepare(dev->clk);
 
+	/* wait for device to power on and come out of reset */
+	usleep_range(10000, 40000);
+
 	dev->clk_enabled = powered;
 
 	return 0;
