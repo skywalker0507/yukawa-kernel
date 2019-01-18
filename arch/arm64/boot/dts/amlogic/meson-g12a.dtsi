@@ -344,6 +344,13 @@
 			#address-cells = <0>;
 		};
 
+		reset: reset-controller@ffd01004 {
+			compatible = "amlogic,meson-g12a-reset",
+				     "amlogic,meson-axg-reset";
+			reg = <0x0 0xffd01004 0x0 0x9c>;
+			#reset-cells = <1>;
+		};
+
 		clk_msr: clock-measure@ffd18000 {
 			compatible = "amlogic,meson-g12a-clk-measure";
 			reg = <0x0 0xffd18000 0x0 0x10>;
