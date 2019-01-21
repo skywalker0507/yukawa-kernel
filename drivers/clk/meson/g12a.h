@@ -127,7 +127,7 @@
 #define CLKID_VAPB_0_DIV			118
 #define CLKID_VAPB_1_DIV			121
 
-#define NR_CLKS					124
+#define NR_CLKS					125
 
 /* include the CLKIDs that have been made part of the DT binding */
 #include <dt-bindings/clock/g12a-clkc.h>
