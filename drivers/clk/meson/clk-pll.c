@@ -46,7 +46,7 @@ meson_clk_pll_data(struct clk_regmap *clk)
 
 static unsigned long __pll_params_to_rate(unsigned long parent_rate,
 					  const struct pll_params_table *pllt,
-					  u16 frac,
+					  u32 frac,
 					  struct meson_clk_pll_data *pll)
 {
 	u64 rate = (u64)parent_rate * pllt->m;
@@ -67,7 +67,7 @@ static unsigned long meson_clk_pll_recalc_rate(struct clk_hw *hw,
 	struct clk_regmap *clk = to_clk_regmap(hw);
 	struct meson_clk_pll_data *pll = meson_clk_pll_data(clk);
 	struct pll_params_table pllt;
-	u16 frac;
+	u32 frac;
 
 	pllt.n = meson_parm_read(clk->map, &pll->n);
 	pllt.m = meson_parm_read(clk->map, &pll->m);
@@ -79,12 +79,12 @@ static unsigned long meson_clk_pll_recalc_rate(struct clk_hw *hw,
 	return __pll_params_to_rate(parent_rate, &pllt, frac, pll);
 }
 
-static u16 __pll_params_with_frac(unsigned long rate,
+static u32 __pll_params_with_frac(unsigned long rate,
 				  unsigned long parent_rate,
 				  const struct pll_params_table *pllt,
 				  struct meson_clk_pll_data *pll)
 {
-	u16 frac_max = (1 << pll->frac.width);
+	u32 frac_max = (1 << pll->frac.width);
 	u64 val = (u64)rate * pllt->n;
 
 	if (pll->flags & CLK_MESON_PLL_ROUND_CLOSEST)
@@ -94,7 +94,7 @@ static u16 __pll_params_with_frac(unsigned long rate,
 
 	val -= pllt->m * frac_max;
 
-	return min((u16)val, (u16)(frac_max - 1));
+	return min((u32)val, (u32)(frac_max - 1));
 }
 
 static bool meson_clk_pll_is_better(unsigned long rate,
@@ -151,7 +151,7 @@ static long meson_clk_pll_round_rate(struct clk_hw *hw, unsigned long rate,
 	const struct pll_params_table *pllt =
 		meson_clk_get_pll_settings(rate, *parent_rate, pll);
 	unsigned long round;
-	u16 frac;
+	u32 frac;
 
 	if (!pllt)
 		return meson_clk_pll_recalc_rate(hw, *parent_rate);
@@ -257,7 +257,7 @@ static int meson_clk_pll_set_rate(struct clk_hw *hw, unsigned long rate,
 	const struct pll_params_table *pllt;
 	unsigned int enabled;
 	unsigned long old_rate;
-	u16 frac = 0;
+	u32 frac = 0;
 
 	if (parent_rate == 0 || rate == 0)
 		return -EINVAL;
