@@ -151,6 +151,7 @@ static unsigned int meson_clk_get_pll_range_m(unsigned long rate,
 	if (__pll_round_closest_mult(pll))
 		return DIV_ROUND_CLOSEST_ULL(val, parent_rate);
 
+
 	return div_u64(val,  parent_rate);
 }
 
