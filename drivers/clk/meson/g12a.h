@@ -122,8 +122,12 @@
 #define CLKID_SYS_PLL_DCO			102
 #define CLKID_GP0_PLL_DCO			103
 #define CLKID_HIFI_PLL_DCO			104
+#define CLKID_VPU_0_DIV				111
+#define CLKID_VPU_1_DIV				114
+#define CLKID_VAPB_0_DIV			118
+#define CLKID_VAPB_1_DIV			121
 
-#define NR_CLKS					110
+#define NR_CLKS					124
 
 /* include the CLKIDs that have been made part of the DT binding */
 #include <dt-bindings/clock/g12a-clkc.h>
