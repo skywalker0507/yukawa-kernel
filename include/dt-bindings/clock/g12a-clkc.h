@@ -95,5 +95,16 @@
 #define CLKID_ROM_BOOT				107
 #define CLKID_RESET_SEC				108
 #define CLKID_SEC_AHB_APB3			109
+#define CLKID_VPU_0_SEL				110
+#define CLKID_VPU_0				112
+#define CLKID_VPU_1_SEL				113
+#define CLKID_VPU_1				115
+#define CLKID_VPU				116
+#define CLKID_VAPB_0_SEL			117
+#define CLKID_VAPB_0				119
+#define CLKID_VAPB_1_SEL			120
+#define CLKID_VAPB_1				122
+#define CLKID_VAPB_SEL				123
+#define CLKID_VAPB				124
 
 #endif /* __G12A_CLKC_H */
