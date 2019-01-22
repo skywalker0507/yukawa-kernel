@@ -234,6 +234,7 @@ static void meson_gx_pwrc_vpu_shutdown(struct platform_device *pdev)
 
 static const struct of_device_id meson_gx_pwrc_vpu_match_table[] = {
 	{ .compatible = "amlogic,meson-gx-pwrc-vpu" },
+	{ .compatible = "amlogic,meson-g12a-pwrc-vpu" },
 	{ /* sentinel */ }
 };
 
