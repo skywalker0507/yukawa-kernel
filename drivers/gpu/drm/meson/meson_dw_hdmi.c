@@ -118,6 +118,8 @@
 #define HHI_HDMI_PHY_CNTL1	0x3a4 /* 0xe9 */
 #define HHI_HDMI_PHY_CNTL2	0x3a8 /* 0xea */
 #define HHI_HDMI_PHY_CNTL3	0x3ac /* 0xeb */
+#define HHI_HDMI_PHY_CNTL4	0x3b0 /* 0xec */
+#define HHI_HDMI_PHY_CNTL5	0x3b4 /* 0xed */
 
 static DEFINE_SPINLOCK(reg_lock);
 
@@ -159,6 +161,10 @@ static unsigned int dw_hdmi_top_read(struct meson_dw_hdmi *dw_hdmi,
 	unsigned long flags;
 	unsigned int data;
 
+	/* TOFIX implement ops table */
+	if (meson_vpu_is_compatible(dw_hdmi->priv, "amlogic,meson-g12a-vpu"))
+		return readl(dw_hdmi->hdmitx + 0x8000 + (addr << 2));
+
 	spin_lock_irqsave(&reg_lock, flags);
 
 	/* ADDR must be written twice */
@@ -178,6 +184,12 @@ static inline void dw_hdmi_top_write(struct meson_dw_hdmi *dw_hdmi,
 				     unsigned int addr, unsigned int data)
 {
 	unsigned long flags;
+
+	/* TOFIX implement ops table */
+	if (meson_vpu_is_compatible(dw_hdmi->priv, "amlogic,meson-g12a-vpu")) {
+		writel(data, dw_hdmi->hdmitx + 0x8000 + (addr << 2));
+		return;
+	}
 
 	spin_lock_irqsave(&reg_lock, flags);
 
@@ -211,6 +223,10 @@ static unsigned int dw_hdmi_dwc_read(struct meson_dw_hdmi *dw_hdmi,
 	unsigned long flags;
 	unsigned int data;
 
+	/* TOFIX implement ops table */
+	if (meson_vpu_is_compatible(dw_hdmi->priv, "amlogic,meson-g12a-vpu"))
+		return readb(dw_hdmi->hdmitx + addr);
+
 	spin_lock_irqsave(&reg_lock, flags);
 
 	/* ADDR must be written twice */
@@ -230,6 +246,12 @@ static inline void dw_hdmi_dwc_write(struct meson_dw_hdmi *dw_hdmi,
 				     unsigned int addr, unsigned int data)
 {
 	unsigned long flags;
+
+	/* TOFIX implement ops table */
+	if (meson_vpu_is_compatible(dw_hdmi->priv, "amlogic,meson-g12a-vpu")) {
+		writeb(data, dw_hdmi->hdmitx + addr);
+		return;
+	}
 
 	spin_lock_irqsave(&reg_lock, flags);
 
@@ -299,6 +321,24 @@ static void meson_hdmi_phy_setup_mode(struct meson_dw_hdmi *dw_hdmi,
 			/* 1.485Gbps, and below */
 			regmap_write(priv->hhi, HHI_HDMI_PHY_CNTL0, 0x33632122);
 			regmap_write(priv->hhi, HHI_HDMI_PHY_CNTL3, 0x2000115b);
+		}
+	} else if (dw_hdmi_is_compatible(dw_hdmi,
+					 "amlogic,meson-g12a-dw-hdmi")) {
+		if (pixel_clock >= 371250) {
+			/* 5.94Gbps, 3.7125Gbps */
+			regmap_write(priv->hhi, HHI_HDMI_PHY_CNTL0, 0x37eb65c4);
+			regmap_write(priv->hhi, HHI_HDMI_PHY_CNTL3, 0x2ab0ff3b);
+			regmap_write(priv->hhi, HHI_HDMI_PHY_CNTL5, 0x0000080b);
+		} else if (pixel_clock >= 297000) {
+			/* 2.97Gbps */
+			regmap_write(priv->hhi, HHI_HDMI_PHY_CNTL0, 0x33eb6262);
+			regmap_write(priv->hhi, HHI_HDMI_PHY_CNTL3, 0x2ab0ff3b);
+			regmap_write(priv->hhi, HHI_HDMI_PHY_CNTL5, 0x00000003);
+		} else {
+			/* 1.485Gbps, and below */
+			regmap_write(priv->hhi, HHI_HDMI_PHY_CNTL0, 0x33eb4242);
+			regmap_write(priv->hhi, HHI_HDMI_PHY_CNTL3, 0x2ab0ff3b);
+			regmap_write(priv->hhi, HHI_HDMI_PHY_CNTL5, 0x00000003);
 		}
 	}
 }
@@ -403,7 +443,8 @@ static int dw_hdmi_phy_init(struct dw_hdmi *hdmi, void *data,
 
 	/* BIT_INVERT */
 	if (dw_hdmi_is_compatible(dw_hdmi, "amlogic,meson-gxl-dw-hdmi") ||
-	    dw_hdmi_is_compatible(dw_hdmi, "amlogic,meson-gxm-dw-hdmi"))
+	    dw_hdmi_is_compatible(dw_hdmi, "amlogic,meson-gxm-dw-hdmi") ||
+	    dw_hdmi_is_compatible(dw_hdmi, "amlogic,meson-g12a-dw-hdmi"))
 		regmap_update_bits(priv->hhi, HHI_HDMI_PHY_CNTL1,
 				   BIT(17), 0);
 	else
@@ -848,10 +889,12 @@ static int meson_dw_hdmi_bind(struct device *dev, struct device *master,
 	reset_control_reset(meson_dw_hdmi->hdmitx_phy);
 
 	/* Enable APB3 fail on error */
-	writel_bits_relaxed(BIT(15), BIT(15),
-			    meson_dw_hdmi->hdmitx + HDMITX_TOP_CTRL_REG);
-	writel_bits_relaxed(BIT(15), BIT(15),
-			    meson_dw_hdmi->hdmitx + HDMITX_DWC_CTRL_REG);
+	if (!meson_vpu_is_compatible(priv, "amlogic,meson-g12a-vpu")) {
+		writel_bits_relaxed(BIT(15), BIT(15),
+				    meson_dw_hdmi->hdmitx + HDMITX_TOP_CTRL_REG);
+		writel_bits_relaxed(BIT(15), BIT(15),
+				    meson_dw_hdmi->hdmitx + HDMITX_DWC_CTRL_REG);
+	}
 
 	/* Bring out of reset */
 	dw_hdmi_top_write(meson_dw_hdmi, HDMITX_TOP_SW_RESET,  0);
@@ -917,6 +960,7 @@ static const struct of_device_id meson_dw_hdmi_of_table[] = {
 	{ .compatible = "amlogic,meson-gxbb-dw-hdmi" },
 	{ .compatible = "amlogic,meson-gxl-dw-hdmi" },
 	{ .compatible = "amlogic,meson-gxm-dw-hdmi" },
+	{ .compatible = "amlogic,meson-g12a-dw-hdmi" },
 	{ }
 };
 MODULE_DEVICE_TABLE(of, meson_dw_hdmi_of_table);
