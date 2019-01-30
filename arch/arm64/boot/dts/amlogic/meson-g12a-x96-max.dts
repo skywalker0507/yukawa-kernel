@@ -141,6 +141,7 @@
 	};
 };
 
+
 &cec_AO {
 	pinctrl-0 = <&cec_ao_a_h_pins>;
 	pinctrl-names = "default";
