@@ -287,3 +287,15 @@
 &uart_AO {
 	status = "okay";
 };
+
+&usb {
+	status = "okay";
+};
+
+&usb3 {
+	status = "okay";
+};
+
+&dwc2 {
+	status = "okay";
+};
