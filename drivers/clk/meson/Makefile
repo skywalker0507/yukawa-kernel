@@ -17,4 +17,5 @@ obj-$(CONFIG_COMMON_CLK_AXG) += axg.o axg-aoclk.o
 obj-$(CONFIG_COMMON_CLK_AXG_AUDIO) += axg-audio.o
 obj-$(CONFIG_COMMON_CLK_GXBB) += gxbb.o gxbb-aoclk.o
 obj-$(CONFIG_COMMON_CLK_G12A) += g12a.o g12a-aoclk.o
+obj-$(CONFIG_COMMON_CLK_G12A_ETH_PLL) += g12a-eth-pll.o
 obj-$(CONFIG_COMMON_CLK_MESON8B) += meson8b.o

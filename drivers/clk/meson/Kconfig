@@ -107,3 +107,14 @@ config COMMON_CLK_G12A
 	help
 	  Support for the clock controller on Amlogic S905D2, S905X2 and S905Y2
 	  devices, aka g12a. Say Y if you want peripherals to work.
+
+config COMMON_CLK_G12A_ETH_PLL
+	tristate "Meson G12a Ethernet PLL Controller"
+	depends on ARCH_MESON
+	select COMMON_CLK_MESON_REGMAP
+	select COMMON_CLK_MESON_PLL
+	select REGMAP_MMIO
+	help
+	  Support for the ethernet PLL of the Amlogic S905D2, S905X2 and S905Y2
+	  devices, aka g12a. Say Y if you want the internal ethernet PHY to
+	  work.
