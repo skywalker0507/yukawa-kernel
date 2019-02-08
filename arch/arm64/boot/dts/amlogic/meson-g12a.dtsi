@@ -580,6 +580,7 @@
 				#size-cells = <0>;
 
 				ext_mdio: mdio@0 {
+					reg = <0>;
 					#address-cells = <1>;
 					#size-cells = <0>;
 				};
