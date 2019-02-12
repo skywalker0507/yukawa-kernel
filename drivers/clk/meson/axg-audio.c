@@ -97,6 +97,7 @@ static AXG_PCLK_GATE(spdifin,	   16);
 static AXG_PCLK_GATE(spdifout,	   17);
 static AXG_PCLK_GATE(resample,	   18);
 static AXG_PCLK_GATE(power_detect, 19);
+static AXG_PCLK_GATE(spdifout_b,   21);
 
 /* Audio Master Clocks */
 static const char * const mst_mux_parent_names[] = {
@@ -121,6 +122,7 @@ static AXG_MST_MCLK_MUX(mst_d_mclk,   AUDIO_MCLK_D_CTRL);
 static AXG_MST_MCLK_MUX(mst_e_mclk,   AUDIO_MCLK_E_CTRL);
 static AXG_MST_MCLK_MUX(mst_f_mclk,   AUDIO_MCLK_F_CTRL);
 static AXG_MST_MCLK_MUX(spdifout_clk, AUDIO_CLK_SPDIFOUT_CTRL);
+static AXG_MST_MCLK_MUX(spdifout_b_clk, AUDIO_CLK_SPDIFOUT_B_CTRL);
 static AXG_MST_MCLK_MUX(pdm_dclk,     AUDIO_CLK_PDMIN_CTRL0);
 static AXG_MST_SYS_MUX(spdifin_clk,   AUDIO_CLK_SPDIFIN_CTRL);
 static AXG_MST_SYS_MUX(pdm_sysclk,    AUDIO_CLK_PDMIN_CTRL1);
@@ -142,6 +144,7 @@ static AXG_MST_MCLK_DIV(mst_d_mclk,   AUDIO_MCLK_D_CTRL);
 static AXG_MST_MCLK_DIV(mst_e_mclk,   AUDIO_MCLK_E_CTRL);
 static AXG_MST_MCLK_DIV(mst_f_mclk,   AUDIO_MCLK_F_CTRL);
 static AXG_MST_MCLK_DIV(spdifout_clk, AUDIO_CLK_SPDIFOUT_CTRL);
+static AXG_MST_MCLK_DIV(spdifout_b_clk, AUDIO_CLK_SPDIFOUT_B_CTRL);
 static AXG_MST_MCLK_DIV(pdm_dclk,     AUDIO_CLK_PDMIN_CTRL0);
 static AXG_MST_SYS_DIV(spdifin_clk,   AUDIO_CLK_SPDIFIN_CTRL);
 static AXG_MST_SYS_DIV(pdm_sysclk,    AUDIO_CLK_PDMIN_CTRL1);
@@ -157,6 +160,7 @@ static AXG_MST_MCLK_GATE(mst_d_mclk,   AUDIO_MCLK_D_CTRL);
 static AXG_MST_MCLK_GATE(mst_e_mclk,   AUDIO_MCLK_E_CTRL);
 static AXG_MST_MCLK_GATE(mst_f_mclk,   AUDIO_MCLK_F_CTRL);
 static AXG_MST_MCLK_GATE(spdifout_clk, AUDIO_CLK_SPDIFOUT_CTRL);
+static AXG_MST_MCLK_GATE(spdifout_b_clk, AUDIO_CLK_SPDIFOUT_B_CTRL);
 static AXG_MST_MCLK_GATE(spdifin_clk,  AUDIO_CLK_SPDIFIN_CTRL);
 static AXG_MST_MCLK_GATE(pdm_dclk,     AUDIO_CLK_PDMIN_CTRL0);
 static AXG_MST_MCLK_GATE(pdm_sysclk,   AUDIO_CLK_PDMIN_CTRL1);
@@ -509,7 +513,149 @@ static struct clk_hw_onecell_data axg_audio_hw_onecell_data = {
 	.num = NR_CLKS,
 };
 
-/* Convenience table to populate regmap in .probe() */
+/*
+ * Array of all G12A clocks provided by this provider
+ * The input clocks of the controller will be populated at runtime
+ */
+static struct clk_hw_onecell_data g12a_audio_hw_onecell_data = {
+	.hws = {
+		[AUD_CLKID_DDR_ARB]		= &ddr_arb.hw,
+		[AUD_CLKID_PDM]			= &pdm.hw,
+		[AUD_CLKID_TDMIN_A]		= &tdmin_a.hw,
+		[AUD_CLKID_TDMIN_B]		= &tdmin_b.hw,
+		[AUD_CLKID_TDMIN_C]		= &tdmin_c.hw,
+		[AUD_CLKID_TDMIN_LB]		= &tdmin_lb.hw,
+		[AUD_CLKID_TDMOUT_A]		= &tdmout_a.hw,
+		[AUD_CLKID_TDMOUT_B]		= &tdmout_b.hw,
+		[AUD_CLKID_TDMOUT_C]		= &tdmout_c.hw,
+		[AUD_CLKID_FRDDR_A]		= &frddr_a.hw,
+		[AUD_CLKID_FRDDR_B]		= &frddr_b.hw,
+		[AUD_CLKID_FRDDR_C]		= &frddr_c.hw,
+		[AUD_CLKID_TODDR_A]		= &toddr_a.hw,
+		[AUD_CLKID_TODDR_B]		= &toddr_b.hw,
+		[AUD_CLKID_TODDR_C]		= &toddr_c.hw,
+		[AUD_CLKID_LOOPBACK]		= &loopback.hw,
+		[AUD_CLKID_SPDIFIN]		= &spdifin.hw,
+		[AUD_CLKID_SPDIFOUT]		= &spdifout.hw,
+		[AUD_CLKID_RESAMPLE]		= &resample.hw,
+		[AUD_CLKID_POWER_DETECT]	= &power_detect.hw,
+		[AUD_CLKID_SPDIFOUT_B]		= &spdifout_b.hw,
+		[AUD_CLKID_MST_A_MCLK_SEL]	= &mst_a_mclk_sel.hw,
+		[AUD_CLKID_MST_B_MCLK_SEL]	= &mst_b_mclk_sel.hw,
+		[AUD_CLKID_MST_C_MCLK_SEL]	= &mst_c_mclk_sel.hw,
+		[AUD_CLKID_MST_D_MCLK_SEL]	= &mst_d_mclk_sel.hw,
+		[AUD_CLKID_MST_E_MCLK_SEL]	= &mst_e_mclk_sel.hw,
+		[AUD_CLKID_MST_F_MCLK_SEL]	= &mst_f_mclk_sel.hw,
+		[AUD_CLKID_MST_A_MCLK_DIV]	= &mst_a_mclk_div.hw,
+		[AUD_CLKID_MST_B_MCLK_DIV]	= &mst_b_mclk_div.hw,
+		[AUD_CLKID_MST_C_MCLK_DIV]	= &mst_c_mclk_div.hw,
+		[AUD_CLKID_MST_D_MCLK_DIV]	= &mst_d_mclk_div.hw,
+		[AUD_CLKID_MST_E_MCLK_DIV]	= &mst_e_mclk_div.hw,
+		[AUD_CLKID_MST_F_MCLK_DIV]	= &mst_f_mclk_div.hw,
+		[AUD_CLKID_MST_A_MCLK]		= &mst_a_mclk.hw,
+		[AUD_CLKID_MST_B_MCLK]		= &mst_b_mclk.hw,
+		[AUD_CLKID_MST_C_MCLK]		= &mst_c_mclk.hw,
+		[AUD_CLKID_MST_D_MCLK]		= &mst_d_mclk.hw,
+		[AUD_CLKID_MST_E_MCLK]		= &mst_e_mclk.hw,
+		[AUD_CLKID_MST_F_MCLK]		= &mst_f_mclk.hw,
+		[AUD_CLKID_SPDIFOUT_CLK_SEL]	= &spdifout_clk_sel.hw,
+		[AUD_CLKID_SPDIFOUT_CLK_DIV]	= &spdifout_clk_div.hw,
+		[AUD_CLKID_SPDIFOUT_CLK]	= &spdifout_clk.hw,
+		[AUD_CLKID_SPDIFOUT_B_CLK_SEL]	= &spdifout_b_clk_sel.hw,
+		[AUD_CLKID_SPDIFOUT_B_CLK_DIV]	= &spdifout_b_clk_div.hw,
+		[AUD_CLKID_SPDIFOUT_B_CLK]	= &spdifout_b_clk.hw,
+		[AUD_CLKID_SPDIFIN_CLK_SEL]	= &spdifin_clk_sel.hw,
+		[AUD_CLKID_SPDIFIN_CLK_DIV]	= &spdifin_clk_div.hw,
+		[AUD_CLKID_SPDIFIN_CLK]		= &spdifin_clk.hw,
+		[AUD_CLKID_PDM_DCLK_SEL]	= &pdm_dclk_sel.hw,
+		[AUD_CLKID_PDM_DCLK_DIV]	= &pdm_dclk_div.hw,
+		[AUD_CLKID_PDM_DCLK]		= &pdm_dclk.hw,
+		[AUD_CLKID_PDM_SYSCLK_SEL]	= &pdm_sysclk_sel.hw,
+		[AUD_CLKID_PDM_SYSCLK_DIV]	= &pdm_sysclk_div.hw,
+		[AUD_CLKID_PDM_SYSCLK]		= &pdm_sysclk.hw,
+		[AUD_CLKID_MST_A_SCLK_PRE_EN]	= &mst_a_sclk_pre_en.hw,
+		[AUD_CLKID_MST_B_SCLK_PRE_EN]	= &mst_b_sclk_pre_en.hw,
+		[AUD_CLKID_MST_C_SCLK_PRE_EN]	= &mst_c_sclk_pre_en.hw,
+		[AUD_CLKID_MST_D_SCLK_PRE_EN]	= &mst_d_sclk_pre_en.hw,
+		[AUD_CLKID_MST_E_SCLK_PRE_EN]	= &mst_e_sclk_pre_en.hw,
+		[AUD_CLKID_MST_F_SCLK_PRE_EN]	= &mst_f_sclk_pre_en.hw,
+		[AUD_CLKID_MST_A_SCLK_DIV]	= &mst_a_sclk_div.hw,
+		[AUD_CLKID_MST_B_SCLK_DIV]	= &mst_b_sclk_div.hw,
+		[AUD_CLKID_MST_C_SCLK_DIV]	= &mst_c_sclk_div.hw,
+		[AUD_CLKID_MST_D_SCLK_DIV]	= &mst_d_sclk_div.hw,
+		[AUD_CLKID_MST_E_SCLK_DIV]	= &mst_e_sclk_div.hw,
+		[AUD_CLKID_MST_F_SCLK_DIV]	= &mst_f_sclk_div.hw,
+		[AUD_CLKID_MST_A_SCLK_POST_EN]	= &mst_a_sclk_post_en.hw,
+		[AUD_CLKID_MST_B_SCLK_POST_EN]	= &mst_b_sclk_post_en.hw,
+		[AUD_CLKID_MST_C_SCLK_POST_EN]	= &mst_c_sclk_post_en.hw,
+		[AUD_CLKID_MST_D_SCLK_POST_EN]	= &mst_d_sclk_post_en.hw,
+		[AUD_CLKID_MST_E_SCLK_POST_EN]	= &mst_e_sclk_post_en.hw,
+		[AUD_CLKID_MST_F_SCLK_POST_EN]	= &mst_f_sclk_post_en.hw,
+		[AUD_CLKID_MST_A_SCLK]		= &mst_a_sclk.hw,
+		[AUD_CLKID_MST_B_SCLK]		= &mst_b_sclk.hw,
+		[AUD_CLKID_MST_C_SCLK]		= &mst_c_sclk.hw,
+		[AUD_CLKID_MST_D_SCLK]		= &mst_d_sclk.hw,
+		[AUD_CLKID_MST_E_SCLK]		= &mst_e_sclk.hw,
+		[AUD_CLKID_MST_F_SCLK]		= &mst_f_sclk.hw,
+		[AUD_CLKID_MST_A_LRCLK_DIV]	= &mst_a_lrclk_div.hw,
+		[AUD_CLKID_MST_B_LRCLK_DIV]	= &mst_b_lrclk_div.hw,
+		[AUD_CLKID_MST_C_LRCLK_DIV]	= &mst_c_lrclk_div.hw,
+		[AUD_CLKID_MST_D_LRCLK_DIV]	= &mst_d_lrclk_div.hw,
+		[AUD_CLKID_MST_E_LRCLK_DIV]	= &mst_e_lrclk_div.hw,
+		[AUD_CLKID_MST_F_LRCLK_DIV]	= &mst_f_lrclk_div.hw,
+		[AUD_CLKID_MST_A_LRCLK]		= &mst_a_lrclk.hw,
+		[AUD_CLKID_MST_B_LRCLK]		= &mst_b_lrclk.hw,
+		[AUD_CLKID_MST_C_LRCLK]		= &mst_c_lrclk.hw,
+		[AUD_CLKID_MST_D_LRCLK]		= &mst_d_lrclk.hw,
+		[AUD_CLKID_MST_E_LRCLK]		= &mst_e_lrclk.hw,
+		[AUD_CLKID_MST_F_LRCLK]		= &mst_f_lrclk.hw,
+		[AUD_CLKID_TDMIN_A_SCLK_SEL]	= &tdmin_a_sclk_sel.hw,
+		[AUD_CLKID_TDMIN_B_SCLK_SEL]	= &tdmin_b_sclk_sel.hw,
+		[AUD_CLKID_TDMIN_C_SCLK_SEL]	= &tdmin_c_sclk_sel.hw,
+		[AUD_CLKID_TDMIN_LB_SCLK_SEL]	= &tdmin_lb_sclk_sel.hw,
+		[AUD_CLKID_TDMOUT_A_SCLK_SEL]	= &tdmout_a_sclk_sel.hw,
+		[AUD_CLKID_TDMOUT_B_SCLK_SEL]	= &tdmout_b_sclk_sel.hw,
+		[AUD_CLKID_TDMOUT_C_SCLK_SEL]	= &tdmout_c_sclk_sel.hw,
+		[AUD_CLKID_TDMIN_A_SCLK_PRE_EN]	= &tdmin_a_sclk_pre_en.hw,
+		[AUD_CLKID_TDMIN_B_SCLK_PRE_EN]	= &tdmin_b_sclk_pre_en.hw,
+		[AUD_CLKID_TDMIN_C_SCLK_PRE_EN]	= &tdmin_c_sclk_pre_en.hw,
+		[AUD_CLKID_TDMIN_LB_SCLK_PRE_EN] = &tdmin_lb_sclk_pre_en.hw,
+		[AUD_CLKID_TDMOUT_A_SCLK_PRE_EN] = &tdmout_a_sclk_pre_en.hw,
+		[AUD_CLKID_TDMOUT_B_SCLK_PRE_EN] = &tdmout_b_sclk_pre_en.hw,
+		[AUD_CLKID_TDMOUT_C_SCLK_PRE_EN] = &tdmout_c_sclk_pre_en.hw,
+		[AUD_CLKID_TDMIN_A_SCLK_POST_EN] = &tdmin_a_sclk_post_en.hw,
+		[AUD_CLKID_TDMIN_B_SCLK_POST_EN] = &tdmin_b_sclk_post_en.hw,
+		[AUD_CLKID_TDMIN_C_SCLK_POST_EN] = &tdmin_c_sclk_post_en.hw,
+		[AUD_CLKID_TDMIN_LB_SCLK_POST_EN] = &tdmin_lb_sclk_post_en.hw,
+		[AUD_CLKID_TDMOUT_A_SCLK_POST_EN] = &tdmout_a_sclk_post_en.hw,
+		[AUD_CLKID_TDMOUT_B_SCLK_POST_EN] = &tdmout_b_sclk_post_en.hw,
+		[AUD_CLKID_TDMOUT_C_SCLK_POST_EN] = &tdmout_c_sclk_post_en.hw,
+		[AUD_CLKID_TDMIN_A_SCLK]	= &tdmin_a_sclk.hw,
+		[AUD_CLKID_TDMIN_B_SCLK]	= &tdmin_b_sclk.hw,
+		[AUD_CLKID_TDMIN_C_SCLK]	= &tdmin_c_sclk.hw,
+		[AUD_CLKID_TDMIN_LB_SCLK]	= &tdmin_lb_sclk.hw,
+		[AUD_CLKID_TDMOUT_A_SCLK]	= &tdmout_a_sclk.hw,
+		[AUD_CLKID_TDMOUT_B_SCLK]	= &tdmout_b_sclk.hw,
+		[AUD_CLKID_TDMOUT_C_SCLK]	= &tdmout_c_sclk.hw,
+		[AUD_CLKID_TDMIN_A_LRCLK]	= &tdmin_a_lrclk.hw,
+		[AUD_CLKID_TDMIN_B_LRCLK]	= &tdmin_b_lrclk.hw,
+		[AUD_CLKID_TDMIN_C_LRCLK]	= &tdmin_c_lrclk.hw,
+		[AUD_CLKID_TDMIN_LB_LRCLK]	= &tdmin_lb_lrclk.hw,
+		[AUD_CLKID_TDMOUT_A_LRCLK]	= &tdmout_a_lrclk.hw,
+		[AUD_CLKID_TDMOUT_B_LRCLK]	= &tdmout_b_lrclk.hw,
+		[AUD_CLKID_TDMOUT_C_LRCLK]	= &tdmout_c_lrclk.hw,
+		[NR_CLKS] = NULL,
+	},
+	.num = NR_CLKS,
+};
+
+/*
+ * Convenience table to populate regmap in .probe()
+ * Note that this table is shared between both AXG and G12A,
+ * with spdifout_b clocks being exclusive to G12A. Since those
+ * clocks are not declared within the AXG onecell table, we do not
+ * feel the need to have separate AXG/G12A regmap tables.
+ */
 static struct clk_regmap *const audio_clk_regmaps[] = {
 	&ddr_arb,
 	&pdm,
@@ -531,6 +677,7 @@ static struct clk_regmap *const audio_clk_regmaps[] = {
 	&spdifout,
 	&resample,
 	&power_detect,
+	&spdifout_b,
 	&mst_a_mclk_sel,
 	&mst_b_mclk_sel,
 	&mst_c_mclk_sel,
@@ -552,6 +699,9 @@ static struct clk_regmap *const audio_clk_regmaps[] = {
 	&spdifout_clk_sel,
 	&spdifout_clk_div,
 	&spdifout_clk,
+	&spdifout_b_clk_sel,
+	&spdifout_b_clk_div,
+	&spdifout_b_clk,
 	&spdifin_clk_sel,
 	&spdifin_clk_div,
 	&spdifin_clk,
@@ -664,9 +814,11 @@ static int devm_clk_get_enable(struct device *dev, char *id)
 	return 0;
 }
 
-static int axg_register_clk_hw_input(struct device *dev,
-				     const char *name,
-				     unsigned int clkid)
+static int
+axg_register_clk_hw_input(struct device *dev,
+			  struct clk_hw_onecell_data *audio_hw_onecell_data,
+			  const char *name,
+			  unsigned int clkid)
 {
 	char *clk_name;
 	struct clk_hw *hw;
@@ -687,17 +839,19 @@ static int axg_register_clk_hw_input(struct device *dev,
 				dev_err(dev, "failed to get %s clock", name);
 		}
 	} else {
-		axg_audio_hw_onecell_data.hws[clkid] = hw;
+		audio_hw_onecell_data->hws[clkid] = hw;
 	}
 
 	kfree(clk_name);
 	return err;
 }
 
-static int axg_register_clk_hw_inputs(struct device *dev,
-				      const char *basename,
-				      unsigned int count,
-				      unsigned int clkid)
+static int
+axg_register_clk_hw_inputs(struct device *dev,
+			   struct clk_hw_onecell_data *audio_hw_onecell_data,
+			   const char *basename,
+			   unsigned int count,
+			   unsigned int clkid)
 {
 	char *name;
 	int i, ret;
@@ -707,7 +861,8 @@ static int axg_register_clk_hw_inputs(struct device *dev,
 		if (!name)
 			return -ENOMEM;
 
-		ret = axg_register_clk_hw_input(dev, name, clkid + i);
+		ret = axg_register_clk_hw_input(dev, audio_hw_onecell_data,
+						name, clkid + i);
 		kfree(name);
 		if (ret)
 			return ret;
@@ -723,14 +878,23 @@ static const struct regmap_config audio_regmap_cfg = {
 	.max_register	= AUDIO_CLK_PDMIN_CTRL1,
 };
 
+struct audioclk_data {
+	struct clk_hw_onecell_data *hw_onecell_data;
+};
+
 static int axg_audio_clkc_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
+	const struct audioclk_data *data;
 	struct regmap *map;
 	struct resource *res;
 	void __iomem *regs;
 	struct clk_hw *hw;
 	int ret, i;
+
+	data = of_device_get_match_data(dev);
+	if (!data)
+		return -EINVAL;
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	regs = devm_ioremap_resource(dev, res);
@@ -759,24 +923,27 @@ static int axg_audio_clkc_probe(struct platform_device *pdev)
 	if (IS_ERR(hw))
 		return PTR_ERR(hw);
 
-	axg_audio_hw_onecell_data.hws[AUD_CLKID_PCLK] = hw;
+	data->hw_onecell_data->hws[AUD_CLKID_PCLK] = hw;
 
 	/* Register optional input master clocks */
-	ret = axg_register_clk_hw_inputs(dev, "mst_in",
+	ret = axg_register_clk_hw_inputs(dev, data->hw_onecell_data,
+					 "mst_in",
 					 AXG_MST_IN_COUNT,
 					 AUD_CLKID_MST0);
 	if (ret)
 		return ret;
 
 	/* Register optional input slave sclks */
-	ret = axg_register_clk_hw_inputs(dev, "slv_sclk",
+	ret = axg_register_clk_hw_inputs(dev, data->hw_onecell_data,
+					 "slv_sclk",
 					 AXG_SLV_SCLK_COUNT,
 					 AUD_CLKID_SLV_SCLK0);
 	if (ret)
 		return ret;
 
 	/* Register optional input slave lrclks */
-	ret = axg_register_clk_hw_inputs(dev, "slv_lrclk",
+	ret = axg_register_clk_hw_inputs(dev, data->hw_onecell_data,
+					 "slv_lrclk",
 					 AXG_SLV_LRCLK_COUNT,
 					 AUD_CLKID_SLV_LRCLK0);
 	if (ret)
@@ -787,8 +954,8 @@ static int axg_audio_clkc_probe(struct platform_device *pdev)
 		audio_clk_regmaps[i]->map = map;
 
 	/* Take care to skip the registered input clocks */
-	for (i = AUD_CLKID_DDR_ARB; i < axg_audio_hw_onecell_data.num; i++) {
-		hw = axg_audio_hw_onecell_data.hws[i];
+	for (i = AUD_CLKID_DDR_ARB; i < data->hw_onecell_data->num; i++) {
+		hw = data->hw_onecell_data->hws[i];
 		/* array might be sparse */
 		if (!hw)
 			continue;
@@ -802,11 +969,22 @@ static int axg_audio_clkc_probe(struct platform_device *pdev)
 	}
 
 	return devm_of_clk_add_hw_provider(dev, of_clk_hw_onecell_get,
-					   &axg_audio_hw_onecell_data);
+					   data->hw_onecell_data);
 }
 
+static const struct audioclk_data axg_audioclk_data = {
+	.hw_onecell_data = &axg_audio_hw_onecell_data,
+};
+
+static const struct audioclk_data g12a_audioclk_data = {
+	.hw_onecell_data = &g12a_audio_hw_onecell_data,
+};
+
 static const struct of_device_id clkc_match_table[] = {
-	{ .compatible = "amlogic,axg-audio-clkc" },
+	{ .compatible = "amlogic,axg-audio-clkc",
+	  .data = &axg_audioclk_data },
+	{ .compatible = "amlogic,g12a-audio-clkc",
+	  .data = &g12a_audioclk_data },
 	{}
 };
 MODULE_DEVICE_TABLE(of, clkc_match_table);
@@ -820,6 +998,6 @@ static struct platform_driver axg_audio_driver = {
 };
 module_platform_driver(axg_audio_driver);
 
-MODULE_DESCRIPTION("Amlogic A113x Audio Clock driver");
+MODULE_DESCRIPTION("Amlogic A113x/G12A Audio Clock driver");
 MODULE_AUTHOR("Jerome Brunet <jbrunet@baylibre.com>");
 MODULE_LICENSE("GPL v2");
