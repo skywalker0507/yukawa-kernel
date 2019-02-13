@@ -15,6 +15,7 @@
 
 	aliases {
 		serial0 = &uart_AO;
+		ethernet0 = &ethmac;
 	};
 
 	ao_5v: regulator-ao_5v {
@@ -93,6 +94,12 @@
 		regulator-always-on;
 	};
 
+};
+
+&ethmac {
+	status = "okay";
+	phy-handle = <&internal_ephy>;
+	phy-mode = "rmii";
 };
 
 /* SD card */
