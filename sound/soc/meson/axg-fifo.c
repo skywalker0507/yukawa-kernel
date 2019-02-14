@@ -120,6 +120,8 @@ static int axg_fifo_pcm_hw_params(struct snd_pcm_substream *ss,
 	end_ptr = runtime->dma_addr + runtime->dma_bytes - AXG_FIFO_BURST;
 	regmap_write(fifo->map, FIFO_START_ADDR, runtime->dma_addr);
 	regmap_write(fifo->map, FIFO_FINISH_ADDR, end_ptr);
+	/* G12A only, but seems harmless on previous gens */
+	regmap_write(fifo->map, FIFO_INIT_ADDR, runtime->dma_addr);
 
 	/* Setup interrupt periodicity */
 	burst_num = params_period_bytes(params) / AXG_FIFO_BURST;
