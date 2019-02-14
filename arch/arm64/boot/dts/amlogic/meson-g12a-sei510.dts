@@ -160,9 +160,41 @@
 		pwms = <&pwm_ef 0 30518 0>; /* PWM_E at 32.768KHz */
 	};
 
-	max98357a {
+	max98357a: audio-codec {
 		compatible = "maxim,max98357a";
 		sdmode-gpios = <&gpio GPIOX_8 GPIO_ACTIVE_HIGH>;
+		#sound-dai-cells = <0>;
+		sound-name-prefix = "SPK1";
+	};
+
+	sound {
+		compatible = "amlogic,axg-sound-card";
+		model = "G12A-SEI510";
+		audio-aux-devs = <&tdmout_a>;
+		audio-routing = "TDMOUT_A IN 0", "FRDDR_A OUT 0";
+		assigned-clocks = <&clkc CLKID_HIFI_PLL>,
+				  <&clkc CLKID_MPLL0>,
+				  <&clkc CLKID_MPLL1>;
+		assigned-clock-parents = <0>, <0>, <0>;
+		assigned-clock-rates = <589824000>,
+				       <270950400>,
+				       <393216000>;
+		status = "okay";
+
+		dai-link-0 {
+			sound-dai = <&frddr_a>;
+		};
+
+		dai-link-1 {
+			sound-dai = <&tdmif_a>;
+			dai-format = "i2s";
+			dai-tdm-slot-tx-mask-0 = <1 1>;
+			mclk-fs = <256>;
+
+			codec@0 {
+				sound-dai = <&max98357a>;
+			};
+		};
 	};
 };
 
@@ -351,5 +383,19 @@
 };
 
 &dwc2 {
+	status = "okay";
+};
+
+&frddr_a {
+	status = "okay";
+};
+
+&tdmif_a {
+	pinctrl-0 = <&tdm_a_sclk_pins>, <&tdm_a_fs_pins>, <&tdm_a_dout0_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&tdmout_a {
 	status = "okay";
 };
