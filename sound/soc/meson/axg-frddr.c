@@ -47,6 +47,23 @@ static int axg_frddr_dai_startup(struct snd_pcm_substream *substream,
 	return 0;
 }
 
+static int g12a_frddr_dai_startup(struct snd_pcm_substream *substream,
+				  struct snd_soc_dai *dai)
+{
+	struct axg_fifo *fifo = snd_soc_dai_get_drvdata(dai);
+	int ret;
+
+	ret = axg_frddr_dai_startup(substream, dai);
+	if (ret)
+		return ret;
+
+	/* Hack for now, enable req_src_sel1 all the time */
+	regmap_update_bits(fifo->map, FIFO_CTRL0,
+			   CTRL0_SRC_SEL_EN(1), CTRL0_SRC_SEL_EN(1));
+
+	return 0;
+}
+
 static void axg_frddr_dai_shutdown(struct snd_pcm_substream *substream,
 				   struct snd_soc_dai *dai)
 {
@@ -66,6 +83,11 @@ static const struct snd_soc_dai_ops axg_frddr_ops = {
 	.shutdown	= axg_frddr_dai_shutdown,
 };
 
+static const struct snd_soc_dai_ops g12a_frddr_ops = {
+	.startup	= g12a_frddr_dai_startup,
+	.shutdown	= axg_frddr_dai_shutdown,
+};
+
 static struct snd_soc_dai_driver axg_frddr_dai_drv = {
 	.name = "FRDDR",
 	.playback = {
@@ -76,6 +98,19 @@ static struct snd_soc_dai_driver axg_frddr_dai_drv = {
 		.formats	= AXG_FIFO_FORMATS,
 	},
 	.ops		= &axg_frddr_ops,
+	.pcm_new	= axg_frddr_pcm_new,
+};
+
+static struct snd_soc_dai_driver g12a_frddr_dai_drv = {
+	.name = "FRDDR",
+	.playback = {
+		.stream_name	= "Playback",
+		.channels_min	= 1,
+		.channels_max	= AXG_FIFO_CH_MAX,
+		.rates		= AXG_FIFO_RATES,
+		.formats	= AXG_FIFO_FORMATS,
+	},
+	.ops		= &g12a_frddr_ops,
 	.pcm_new	= axg_frddr_pcm_new,
 };
 
@@ -129,7 +164,7 @@ static const struct axg_fifo_match_data axg_frddr_match_data = {
 
 static const struct axg_fifo_match_data g12a_frddr_match_data = {
 	.component_drv	= &g12a_frddr_component_drv,
-	.dai_drv	= &axg_frddr_dai_drv
+	.dai_drv	= &g12a_frddr_dai_drv
 };
 
 static const struct of_device_id axg_frddr_of_match[] = {

@@ -45,6 +45,7 @@ struct snd_soc_pcm_runtime;
 #define  CTRL0_INT_EN(x)		((x) << 16)
 #define  CTRL0_SEL_MASK			GENMASK(2, 0)
 #define  CTRL0_SEL_SHIFT		0
+#define  CTRL0_SRC_SEL_EN(x)		BIT(((x - 1) * 4) + 3)
 #define FIFO_CTRL1			0x04
 #define  CTRL1_INT_CLR(x)		((x) << 0)
 #define  CTRL1_STATUS2_SEL_MASK		GENMASK(11, 8)
