@@ -793,7 +793,7 @@
 			};
 
 			toddr_a: audio-controller@100 {
-				compatible = "amlogic,axg-toddr";
+				compatible = "amlogic,g12a-toddr";
 				reg = <0x0 0x100 0x0 0x1c>;
 				#sound-dai-cells = <0>;
 				sound-name-prefix = "TODDR_A";
@@ -804,7 +804,7 @@
 			};
 
 			toddr_b: audio-controller@140 {
-				compatible = "amlogic,axg-toddr";
+				compatible = "amlogic,g12a-toddr";
 				reg = <0x0 0x140 0x0 0x1c>;
 				#sound-dai-cells = <0>;
 				sound-name-prefix = "TODDR_B";
@@ -815,7 +815,7 @@
 			};
 
 			toddr_c: audio-controller@180 {
-				compatible = "amlogic,axg-toddr";
+				compatible = "amlogic,g12a-toddr";
 				reg = <0x0 0x180 0x0 0x1c>;
 				#sound-dai-cells = <0>;
 				sound-name-prefix = "TODDR_C";
@@ -826,7 +826,7 @@
 			};
 
 			frddr_a: audio-controller@1c0 {
-				compatible = "amlogic,axg-frddr";
+				compatible = "amlogic,g12a-frddr";
 				reg = <0x0 0x1c0 0x0 0x1c>;
 				#sound-dai-cells = <0>;
 				sound-name-prefix = "FRDDR_A";
@@ -837,7 +837,7 @@
 			};
 
 			frddr_b: audio-controller@200 {
-				compatible = "amlogic,axg-frddr";
+				compatible = "amlogic,g12a-frddr";
 				reg = <0x0 0x200 0x0 0x1c>;
 				#sound-dai-cells = <0>;
 				sound-name-prefix = "FRDDR_B";
@@ -848,7 +848,7 @@
 			};
 
 			frddr_c: audio-controller@240 {
-				compatible = "amlogic,axg-frddr";
+				compatible = "amlogic,g12a-frddr";
 				reg = <0x0 0x240 0x0 0x1c>;
 				#sound-dai-cells = <0>;
 				sound-name-prefix = "FRDDR_C";
