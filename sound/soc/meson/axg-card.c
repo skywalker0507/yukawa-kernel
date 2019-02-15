@@ -10,9 +10,15 @@
 
 #include "axg-tdm.h"
 
+struct card_cpu_ops {
+	int (*is_capture_fe)(struct device_node *np);
+	int (*is_playback_fe)(struct device_node *np);
+};
+
 struct axg_card {
 	struct snd_soc_card card;
 	void **link_data;
+	const struct card_cpu_ops *ops;
 };
 
 struct axg_dai_link_tdm_mask {
@@ -510,6 +516,16 @@ static int axg_card_cpu_is_playback_fe(struct device_node *np)
 	return of_device_is_compatible(np, PREFIX "axg-frddr");
 }
 
+static int g12a_card_cpu_is_capture_fe(struct device_node *np)
+{
+	return of_device_is_compatible(np, PREFIX "g12a-toddr");
+}
+
+static int g12a_card_cpu_is_playback_fe(struct device_node *np)
+{
+	return of_device_is_compatible(np, PREFIX "g12a-frddr");
+}
+
 static int axg_card_cpu_is_tdm_iface(struct device_node *np)
 {
 	return of_device_is_compatible(np, PREFIX "axg-tdm-iface");
@@ -518,6 +534,7 @@ static int axg_card_cpu_is_tdm_iface(struct device_node *np)
 static int axg_card_add_link(struct snd_soc_card *card, struct device_node *np,
 			     int *index)
 {
+	struct axg_card *priv = snd_soc_card_get_drvdata(card);
 	struct snd_soc_dai_link *dai_link = &card->dai_link[*index];
 	int ret;
 
@@ -526,9 +543,9 @@ static int axg_card_add_link(struct snd_soc_card *card, struct device_node *np,
 	if (ret)
 		return ret;
 
-	if (axg_card_cpu_is_playback_fe(dai_link->cpu_of_node))
+	if (priv->ops->is_playback_fe(dai_link->cpu_of_node))
 		ret = axg_card_set_fe_link(card, dai_link, true);
-	else if (axg_card_cpu_is_capture_fe(dai_link->cpu_of_node))
+	else if (priv->ops->is_capture_fe(dai_link->cpu_of_node))
 		ret = axg_card_set_fe_link(card, dai_link, false);
 	else
 		ret = axg_card_set_be_link(card, dai_link, np);
@@ -586,8 +603,19 @@ static int axg_card_parse_of_optional(struct snd_soc_card *card,
 	return func(card, propname);
 }
 
+static const struct card_cpu_ops axg_card_cpu_ops = {
+	.is_playback_fe = axg_card_cpu_is_playback_fe,
+	.is_capture_fe = axg_card_cpu_is_capture_fe,
+};
+
+static const struct card_cpu_ops g12a_card_cpu_ops = {
+	.is_playback_fe = g12a_card_cpu_is_playback_fe,
+	.is_capture_fe = g12a_card_cpu_is_capture_fe,
+};
+
 static const struct of_device_id axg_card_of_match[] = {
-	{ .compatible = "amlogic,axg-sound-card", },
+	{ .compatible = "amlogic,axg-sound-card", .data = &axg_card_cpu_ops},
+	{ .compatible = "amlogic,g12a-sound-card", .data = &g12a_card_cpu_ops},
 	{}
 };
 MODULE_DEVICE_TABLE(of, axg_card_of_match);
@@ -596,7 +624,14 @@ static int axg_card_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct axg_card *priv;
+	const struct card_cpu_ops *data;
 	int ret;
+
+	data = of_device_get_match_data(dev);
+	if (!data) {
+		dev_err(dev, "failed to match device\n");
+		return -ENODEV;
+	}
 
 	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
 	if (!priv)
@@ -607,6 +642,7 @@ static int axg_card_probe(struct platform_device *pdev)
 
 	priv->card.owner = THIS_MODULE;
 	priv->card.dev = dev;
+	priv->ops = data;
 
 	ret = snd_soc_of_parse_card_name(&priv->card, "model");
 	if (ret < 0)
