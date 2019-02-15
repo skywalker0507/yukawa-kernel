@@ -173,11 +173,11 @@
 		audio-aux-devs = <&tdmout_a>;
 		audio-routing = "TDMOUT_A IN 0", "FRDDR_A OUT 0",
 				"TDM_A Playback", "TDMOUT_A OUT";
-		assigned-clocks = <&clkc CLKID_HIFI_PLL>,
+		assigned-clocks = <&clkc CLKID_MPLL2>,
 				  <&clkc CLKID_MPLL0>,
 				  <&clkc CLKID_MPLL1>;
 		assigned-clock-parents = <0>, <0>, <0>;
-		assigned-clock-rates = <589824000>,
+		assigned-clock-rates = <294912000>,
 				       <270950400>,
 				       <393216000>;
 		status = "okay";
