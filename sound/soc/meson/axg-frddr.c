@@ -114,8 +114,21 @@ static const struct snd_soc_component_driver axg_frddr_component_drv = {
 	.ops			= &axg_fifo_pcm_ops
 };
 
+static const struct snd_soc_component_driver g12a_frddr_component_drv = {
+	.dapm_widgets		= axg_frddr_dapm_widgets,
+	.num_dapm_widgets	= ARRAY_SIZE(axg_frddr_dapm_widgets),
+	.dapm_routes		= axg_frddr_dapm_routes,
+	.num_dapm_routes	= ARRAY_SIZE(axg_frddr_dapm_routes),
+	.ops			= &g12a_fifo_pcm_ops
+};
+
 static const struct axg_fifo_match_data axg_frddr_match_data = {
 	.component_drv	= &axg_frddr_component_drv,
+	.dai_drv	= &axg_frddr_dai_drv
+};
+
+static const struct axg_fifo_match_data g12a_frddr_match_data = {
+	.component_drv	= &g12a_frddr_component_drv,
 	.dai_drv	= &axg_frddr_dai_drv
 };
 
@@ -123,6 +136,9 @@ static const struct of_device_id axg_frddr_of_match[] = {
 	{
 		.compatible = "amlogic,axg-frddr",
 		.data = &axg_frddr_match_data,
+	}, {
+		.compatible = "amlogic,g12a-frddr",
+		.data = &g12a_frddr_match_data,
 	}, {}
 };
 MODULE_DEVICE_TABLE(of, axg_frddr_of_match);

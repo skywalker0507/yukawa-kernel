@@ -167,8 +167,21 @@ static const struct snd_soc_component_driver axg_toddr_component_drv = {
 	.ops			= &axg_fifo_pcm_ops
 };
 
+static const struct snd_soc_component_driver g12a_toddr_component_drv = {
+	.dapm_widgets		= axg_toddr_dapm_widgets,
+	.num_dapm_widgets	= ARRAY_SIZE(axg_toddr_dapm_widgets),
+	.dapm_routes		= axg_toddr_dapm_routes,
+	.num_dapm_routes	= ARRAY_SIZE(axg_toddr_dapm_routes),
+	.ops			= &g12a_fifo_pcm_ops
+};
+
 static const struct axg_fifo_match_data axg_toddr_match_data = {
 	.component_drv	= &axg_toddr_component_drv,
+	.dai_drv	= &axg_toddr_dai_drv
+};
+
+static const struct axg_fifo_match_data g12a_toddr_match_data = {
+	.component_drv	= &g12a_toddr_component_drv,
 	.dai_drv	= &axg_toddr_dai_drv
 };
 
@@ -176,6 +189,9 @@ static const struct of_device_id axg_toddr_of_match[] = {
 	{
 		.compatible = "amlogic,axg-toddr",
 		.data = &axg_toddr_match_data,
+	}, {
+		.compatible = "amlogic,g12a-toddr",
+		.data = &g12a_toddr_match_data,
 	}, {}
 };
 MODULE_DEVICE_TABLE(of, axg_toddr_of_match);

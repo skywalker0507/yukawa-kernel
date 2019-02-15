@@ -120,8 +120,6 @@ static int axg_fifo_pcm_hw_params(struct snd_pcm_substream *ss,
 	end_ptr = runtime->dma_addr + runtime->dma_bytes - AXG_FIFO_BURST;
 	regmap_write(fifo->map, FIFO_START_ADDR, runtime->dma_addr);
 	regmap_write(fifo->map, FIFO_FINISH_ADDR, end_ptr);
-	/* G12A only, but seems harmless on previous gens */
-	regmap_write(fifo->map, FIFO_INIT_ADDR, runtime->dma_addr);
 
 	/* Setup interrupt periodicity */
 	burst_num = params_period_bytes(params) / AXG_FIFO_BURST;
@@ -131,6 +129,23 @@ static int axg_fifo_pcm_hw_params(struct snd_pcm_substream *ss,
 	regmap_update_bits(fifo->map, FIFO_CTRL0,
 			   CTRL0_INT_EN(FIFO_INT_COUNT_REPEAT),
 			   CTRL0_INT_EN(FIFO_INT_COUNT_REPEAT));
+
+	return 0;
+}
+
+static int g12a_fifo_pcm_hw_params(struct snd_pcm_substream *ss,
+				   struct snd_pcm_hw_params *params)
+{
+	struct snd_pcm_runtime *runtime = ss->runtime;
+	struct axg_fifo *fifo = axg_fifo_data(ss);
+	int ret;
+
+	ret = axg_fifo_pcm_hw_params(ss, params);
+	if (ret < 0)
+		return ret;
+
+	/* additional dma memory pointer */
+	regmap_write(fifo->map, FIFO_INIT_ADDR, runtime->dma_addr);
 
 	return 0;
 }
@@ -263,6 +278,17 @@ const struct snd_pcm_ops axg_fifo_pcm_ops = {
 	.trigger =	axg_fifo_pcm_trigger,
 };
 EXPORT_SYMBOL_GPL(axg_fifo_pcm_ops);
+
+const struct snd_pcm_ops g12a_fifo_pcm_ops = {
+	.open =		axg_fifo_pcm_open,
+	.close =        axg_fifo_pcm_close,
+	.ioctl =	snd_pcm_lib_ioctl,
+	.hw_params =	g12a_fifo_pcm_hw_params,
+	.hw_free =      axg_fifo_pcm_hw_free,
+	.pointer =	axg_fifo_pcm_pointer,
+	.trigger =	axg_fifo_pcm_trigger,
+};
+EXPORT_SYMBOL_GPL(g12a_fifo_pcm_ops);
 
 int axg_fifo_pcm_new(struct snd_soc_pcm_runtime *rtd, unsigned int type)
 {
