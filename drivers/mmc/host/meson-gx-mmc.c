@@ -57,10 +57,12 @@
 #define   CLK_V3_RX_DELAY_MASK GENMASK(27, 22)
 #define   CLK_V3_ALWAYS_ON BIT(28)
 
-#define   CLK_DELAY_STEP_PS 200
+#define   CLK_DELAY_STEP_PS_V2 200
+#define   CLK_DELAY_STEP_PS_V3 50
 #define   CLK_PHASE_STEP 30
 #define   CLK_PHASE_POINT_NUM (360 / CLK_PHASE_STEP)
 
+#define   CLK_DELAY_STEP_PS(h)		(h->data->delay_step_ps)
 #define   CLK_TX_DELAY_MASK(h)		(h->data->tx_delay_mask)
 #define   CLK_RX_DELAY_MASK(h)		(h->data->rx_delay_mask)
 #define   CLK_ALWAYS_ON(h)		(h->data->always_on)
@@ -144,6 +146,7 @@
 #define MUX_CLK_NUM_PARENTS 2
 
 struct meson_mmc_data {
+	unsigned int delay_step_ps;
 	unsigned int tx_delay_mask;
 	unsigned int rx_delay_mask;
 	unsigned int always_on;
@@ -605,7 +608,7 @@ static int meson_mmc_clk_init(struct meson_host *host)
 	tx->reg = host->regs + SD_EMMC_CLOCK;
 	tx->phase_mask = CLK_TX_PHASE_MASK;
 	tx->delay_mask = CLK_TX_DELAY_MASK(host);
-	tx->delay_step_ps = CLK_DELAY_STEP_PS;
+	tx->delay_step_ps = CLK_DELAY_STEP_PS(host);
 	tx->hw.init = &init;
 
 	host->tx_clk = devm_clk_register(host->dev, &tx->hw);
@@ -628,7 +631,7 @@ static int meson_mmc_clk_init(struct meson_host *host)
 	rx->reg = host->regs + SD_EMMC_CLOCK;
 	rx->phase_mask = CLK_RX_PHASE_MASK;
 	rx->delay_mask = CLK_RX_DELAY_MASK(host);
-	rx->delay_step_ps = CLK_DELAY_STEP_PS;
+	rx->delay_step_ps = CLK_DELAY_STEP_PS(host);
 	rx->hw.init = &init;
 
 	host->rx_clk = devm_clk_register(host->dev, &rx->hw);
@@ -1400,6 +1403,7 @@ static int meson_mmc_remove(struct platform_device *pdev)
 }
 
 static const struct meson_mmc_data meson_gx_data = {
+	.delay_step_ps	= CLK_DELAY_STEP_PS_V2,
 	.tx_delay_mask	= CLK_V2_TX_DELAY_MASK,
 	.rx_delay_mask	= CLK_V2_RX_DELAY_MASK,
 	.always_on	= CLK_V2_ALWAYS_ON,
@@ -1407,6 +1411,7 @@ static const struct meson_mmc_data meson_gx_data = {
 };
 
 static const struct meson_mmc_data meson_axg_data = {
+	.delay_step_ps	= CLK_DELAY_STEP_PS_V3,
 	.tx_delay_mask	= CLK_V3_TX_DELAY_MASK,
 	.rx_delay_mask	= CLK_V3_RX_DELAY_MASK,
 	.always_on	= CLK_V3_ALWAYS_ON,
