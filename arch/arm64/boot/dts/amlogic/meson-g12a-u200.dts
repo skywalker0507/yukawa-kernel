@@ -74,7 +74,18 @@
 		regulator-max-microvolt = <5000000>;
 		vin-supply = <&main_12v>;
 
-		gpio = <&gpio GPIOH_8 GPIO_ACTIVE_HIGH>;
+		gpio = <&gpio GPIOH_8 GPIO_OPEN_DRAIN>;
+		enable-active-high;
+	};
+
+	usb_pwr_en: regulator-usb_pwr_en {
+		compatible = "regulator-fixed";
+		regulator-name = "USB_PWR_EN";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		vin-supply = <&vcc_5v>;
+
+		gpio = <&gpio GPIOH_6 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 	};
 
@@ -167,3 +178,19 @@
 	vqmmc-supply = <&flash_1v8>;
 };
 
+&usb {
+	status = "okay";
+	vbus-supply = <&usb_pwr_en>;
+};
+
+&usb2_phy0 {
+	phy-supply = <&vcc_5v>;
+};
+
+&usb2_phy1 {
+	phy-supply = <&vcc_5v>;
+};
+
+&dwc2 {
+	status = "okay";
+};
