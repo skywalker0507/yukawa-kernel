@@ -132,5 +132,6 @@
 #define CLKID_MALI				175
 #define CLKID_MPLL_5OM				177
 #define CLKID_PCIE_PLL				181
+#define CLKID_CPU_CLK				191
 
 #endif /* __G12A_CLKC_H */
