@@ -38,6 +38,10 @@ struct meson_clk_pll_data {
 	struct parm rst;
 	const struct reg_sequence *init_regs;
 	unsigned int init_count;
+	const struct reg_sequence *pre_enable_regs;
+	unsigned int pre_enable_count;
+	const struct reg_sequence *post_enable_regs;
+	unsigned int post_enable_count;
 	const struct pll_params_table *table;
 	const struct pll_mult_range *range;
 	u8 flags;

@@ -312,6 +312,10 @@ static int meson_clk_pll_enable(struct clk_hw *hw)
 	if (clk_hw_is_enabled(hw))
 		return 0;
 
+	if (pll->pre_enable_count)
+		regmap_multi_reg_write(clk->map, pll->pre_enable_regs,
+				       pll->pre_enable_count);
+
 	/* Make sure the pll is in reset */
 	meson_parm_write(clk->map, &pll->rst, 1);
 
@@ -320,6 +324,10 @@ static int meson_clk_pll_enable(struct clk_hw *hw)
 
 	/* Take the pll out reset */
 	meson_parm_write(clk->map, &pll->rst, 0);
+
+	if (pll->post_enable_count)
+		regmap_multi_reg_write(clk->map, pll->post_enable_regs,
+				       pll->post_enable_count);
 
 	if (meson_clk_pll_wait_lock(hw))
 		return -EIO;
