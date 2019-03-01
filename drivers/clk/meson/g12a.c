@@ -614,6 +614,114 @@ static struct clk_regmap g12a_hifi_pll = {
 	},
 };
 
+static const struct reg_sequence g12a_pcie_pre_enable_regs[] = {
+	{ .reg = HHI_PCIE_PLL_CNTL0,	.def = 0x20090496 },
+	{ .reg = HHI_PCIE_PLL_CNTL1,	.def = 0x00000000 },
+	{ .reg = HHI_PCIE_PLL_CNTL2,	.def = 0x00001100 },
+	{ .reg = HHI_PCIE_PLL_CNTL3,	.def = 0x10058e00 },
+	{ .reg = HHI_PCIE_PLL_CNTL4,	.def = 0x008100c0 },
+	{ .reg = HHI_PCIE_PLL_CNTL5,	.def = 0x68000048 },
+	{ .reg = HHI_PCIE_PLL_CNTL0,	.def = 0x34090496 },
+};
+
+static const struct reg_sequence g12a_pcie_post_enable_regs[] = {
+	{ .reg = HHI_PCIE_PLL_CNTL2,	.def = 0x00001000 },
+};
+
+static const struct pll_params_table g12a_pcie_pll_table[] = {
+	PLL_PARAMS(150, 1),
+	{0, 0},
+};
+
+static struct clk_regmap g12a_pcie_pll_dco = {
+	.data = &(struct meson_clk_pll_data){
+		.en = {
+			.reg_off = HHI_PCIE_PLL_CNTL0,
+			.shift   = 28,
+			.width   = 1,
+		},
+		.m = {
+			.reg_off = HHI_PCIE_PLL_CNTL0,
+			.shift   = 0,
+			.width   = 8,
+		},
+		.n = {
+			.reg_off = HHI_PCIE_PLL_CNTL0,
+			.shift   = 10,
+			.width   = 5,
+		},
+		.frac = {
+			.reg_off = HHI_PCIE_PLL_CNTL1,
+			.shift   = 0,
+			.width   = 12,
+		},
+		.l = {
+			.reg_off = HHI_PCIE_PLL_CNTL0,
+			.shift   = 31,
+			.width   = 1,
+		},
+		.rst = {
+			.reg_off = HHI_PCIE_PLL_CNTL0,
+			.shift   = 29,
+			.width   = 1,
+		},
+		.table = g12a_pcie_pll_table,
+		.pre_enable_regs = g12a_pcie_pre_enable_regs,
+		.pre_enable_count = ARRAY_SIZE(g12a_pcie_pre_enable_regs),
+		.post_enable_regs = g12a_pcie_post_enable_regs,
+		.post_enable_count = ARRAY_SIZE(g12a_pcie_post_enable_regs),
+		.flags = CLK_MESON_PLL_ROUND_CLOSEST,
+	},
+	.hw.init = &(struct clk_init_data){
+		.name = "pcie_pll_dco",
+		.ops = &meson_clk_pll_ops,
+		.parent_names = (const char *[]){ IN_PREFIX "xtal" },
+		.num_parents = 1,
+	},
+};
+
+static struct clk_fixed_factor g12a_pcie_pll_dco_div2 = {
+	.mult = 1,
+	.div = 2,
+	.hw.init = &(struct clk_init_data){
+		.name = "pcie_pll_dco_div2",
+		.ops = &clk_fixed_factor_ops,
+		.parent_names = (const char *[]){ "pcie_pll_dco" },
+		.num_parents = 1,
+		.flags = CLK_SET_RATE_PARENT,
+	},
+};
+
+static struct clk_regmap g12a_pcie_pll_od = {
+	.data = &(struct clk_regmap_div_data){
+		.offset = HHI_PCIE_PLL_CNTL0,
+		.shift = 16,
+		.width = 5,
+		.flags = CLK_DIVIDER_ROUND_CLOSEST |
+			 CLK_DIVIDER_ONE_BASED |
+			 CLK_DIVIDER_ALLOW_ZERO,
+	},
+	.hw.init = &(struct clk_init_data){
+		.name = "pcie_pll_od",
+		.ops = &clk_regmap_divider_ops,
+		.parent_names = (const char *[]){ "pcie_pll_dco_div2" },
+		.num_parents = 1,
+		.flags = CLK_SET_RATE_PARENT,
+	},
+};
+
+static struct clk_fixed_factor g12a_pcie_pll = {
+	.mult = 1,
+	.div = 2,
+	.hw.init = &(struct clk_init_data){
+		.name = "pcie_pll_pll",
+		.ops = &clk_fixed_factor_ops,
+		.parent_names = (const char *[]){ "pcie_pll_od" },
+		.num_parents = 1,
+		.flags = CLK_SET_RATE_PARENT,
+	},
+};
+
 static struct clk_regmap g12a_hdmi_pll_dco = {
 	.data = &(struct meson_clk_pll_data){
 		.en = {
@@ -2499,6 +2607,10 @@ static struct clk_hw_onecell_data g12a_hw_onecell_data = {
 		[CLKID_CPU_CLK_AXI]		= &g12a_cpu_clk_axi.hw,
 		[CLKID_CPU_CLK_TRACE_DIV]	= &g12a_cpu_clk_trace_div.hw,
 		[CLKID_CPU_CLK_TRACE]		= &g12a_cpu_clk_trace.hw,
+		[CLKID_PCIE_PLL_DCO]		= &g12a_pcie_pll_dco.hw,
+		[CLKID_PCIE_PLL_DCO_DIV2]	= &g12a_pcie_pll_dco_div2.hw,
+		[CLKID_PCIE_PLL_OD]		= &g12a_pcie_pll_od.hw,
+		[CLKID_PCIE_PLL]		= &g12a_pcie_pll.hw,
 		[NR_CLKS]			= NULL,
 	},
 	.num = NR_CLKS,
@@ -2685,6 +2797,8 @@ static struct clk_regmap *const g12a_clk_regmaps[] = {
 	&g12a_cpu_clk_axi,
 	&g12a_cpu_clk_trace_div,
 	&g12a_cpu_clk_trace,
+	&g12a_pcie_pll_od,
+	&g12a_pcie_pll_dco,
 };
 
 static const struct meson_eeclkc_data g12a_clkc_data = {
