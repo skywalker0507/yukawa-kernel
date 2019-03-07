@@ -163,7 +163,7 @@
 	status = "okay";
 	vbus-supply = <&usb_pwr_en>;
 	/* PCIe and USB3 are exclusive, uncomment the following line for PCIe */
-	/* phys = <&usb2_phy0>, <&usb2_phy1>, <0>; */
+	phys = <&usb2_phy0>, <&usb2_phy1>, <0>;
 };
 
 &usb2_phy0 {
@@ -180,6 +180,6 @@
 
 &pcie {
 	/* PCIe and USB3 are exclusive, uncomment the following line for PCIe */
-	/* status = "okay"; */
+	status = "okay";
 	reset-gpios = <&gpio GPIOX_7 GPIO_ACTIVE_HIGH>;
 };
