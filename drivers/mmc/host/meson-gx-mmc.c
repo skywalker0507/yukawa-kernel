@@ -745,7 +745,25 @@ static int meson_mmc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 {
 	struct meson_host *host = mmc_priv(mmc);
 
-	return meson_mmc_clk_phase_tuning(mmc, opcode, host->rx_clk);
+	/*
+	 * Yes, tuning on tx does not make much sense BUT:
+	 *
+	 * Tuning is supposed to be there compensate the round trip delay
+	 * of the clock when reading from the MMC device, so tuning should
+	 * naturally be performed on the Rx path.
+	 *
+	 * However, on these SoCs, tuning on Rx proved to be useless, the
+	 * tuning result tends to be the same for every values. Tuning on
+	 * Tx seems way more useful, giving nice windows of working and
+	 * failing values.
+	 *
+	 * Tuning on Tx solved many issues for both UHS SD and eMMC HS200
+	 * on various SoCs. Are Tx and Rx inverted in the documentation ?
+	 * Or is it written for the POV of the device and not the host ?
+	 * Who knows ...
+	 */
+
+	return meson_mmc_clk_phase_tuning(mmc, opcode, host->tx_clk);
 }
 
 static void meson_mmc_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
@@ -775,7 +793,7 @@ static void meson_mmc_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 			mmc_regulator_set_ocr(mmc, mmc->supply.vmmc, ios->vdd);
 
 		/* Reset rx phase */
-		clk_set_phase(host->rx_clk, 0);
+		clk_set_phase(host->tx_clk, 0);
 
 		break;
 
