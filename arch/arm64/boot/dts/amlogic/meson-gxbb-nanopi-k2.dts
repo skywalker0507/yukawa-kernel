@@ -322,7 +322,6 @@
 	non-removable;
 	disable-wp;
 	cap-mmc-highspeed;
-	mmc-ddr-1_8v;
 	mmc-hs200-1_8v;
 
 	mmc-pwrseq = <&emmc_pwrseq>;
