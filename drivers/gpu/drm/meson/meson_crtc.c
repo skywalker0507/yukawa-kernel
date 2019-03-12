@@ -106,10 +106,10 @@ static void meson_crtc_atomic_enable(struct drm_crtc *crtc,
 		       priv->io_base + _REG(VPP_POSTBLEND_H_SIZE));
 
 		writel_relaxed(0 << 16 |
-				crtc_state->mode.hdisplay,
+				(crtc_state->mode.hdisplay - 1),
 				priv->io_base + _REG(VPP_OSD1_BLD_H_SCOPE));
 		writel_relaxed(0 << 16 |
-				crtc_state->mode.vdisplay,
+				(crtc_state->mode.vdisplay - 1),
 				priv->io_base + _REG(VPP_OSD1_BLD_V_SCOPE));
 		writel_relaxed(crtc_state->mode.hdisplay << 16 |
 				crtc_state->mode.vdisplay,
