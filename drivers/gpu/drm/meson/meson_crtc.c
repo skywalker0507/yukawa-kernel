@@ -298,9 +298,9 @@ void meson_crtc_irq(struct meson_drm *priv)
 						    MESON_CANVAS_ENDIAN_SWAP64);
 			else
 				meson_canvas_setup(priv, MESON_CANVAS_ID_VD1_1,
-						   priv->viu.vd1_addr2,
-						   priv->viu.vd1_stride2,
-						   priv->viu.vd1_height2,
+						   priv->viu.vd1_addr1,
+						   priv->viu.vd1_stride1,
+						   priv->viu.vd1_height1,
 						   MESON_CANVAS_WRAP_NONE,
 						   MESON_CANVAS_BLKMODE_LINEAR,
 						   MESON_CANVAS_ENDIAN_SWAP64);
@@ -317,98 +317,98 @@ void meson_crtc_irq(struct meson_drm *priv)
 						    MESON_CANVAS_ENDIAN_SWAP64);
 			else
 				meson_canvas_setup(priv, MESON_CANVAS_ID_VD1_0,
-						   priv->viu.vd1_addr2,
-						   priv->viu.vd1_stride2,
-						   priv->viu.vd1_height2,
+						   priv->viu.vd1_addr0,
+						   priv->viu.vd1_stride0,
+						   priv->viu.vd1_height0,
 						   MESON_CANVAS_WRAP_NONE,
 						   MESON_CANVAS_BLKMODE_LINEAR,
 						   MESON_CANVAS_ENDIAN_SWAP64);
 		};
 
 		writel_relaxed(priv->viu.vd1_if0_gen_reg,
-				priv->io_base + _REG(VD1_IF0_GEN_REG));
+				priv->io_base + _REG(VD1_IF0_GEN_REG + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_gen_reg,
-				priv->io_base + _REG(VD2_IF0_GEN_REG));
+				priv->io_base + _REG(VD2_IF0_GEN_REG + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_gen_reg2,
-				priv->io_base + _REG(VD1_IF0_GEN_REG2));
+				priv->io_base + _REG(VD1_IF0_GEN_REG2 + 0x17b0));
 		writel_relaxed(priv->viu.viu_vd1_fmt_ctrl,
-				priv->io_base + _REG(VIU_VD1_FMT_CTRL));
+				priv->io_base + _REG(VIU_VD1_FMT_CTRL + 0x17b0));
 		writel_relaxed(priv->viu.viu_vd1_fmt_ctrl,
-				priv->io_base + _REG(VIU_VD2_FMT_CTRL));
+				priv->io_base + _REG(VIU_VD2_FMT_CTRL + 0x17b0));
 		writel_relaxed(priv->viu.viu_vd1_fmt_w,
-				priv->io_base + _REG(VIU_VD1_FMT_W));
+				priv->io_base + _REG(VIU_VD1_FMT_W + 0x17b0));
 		writel_relaxed(priv->viu.viu_vd1_fmt_w,
-				priv->io_base + _REG(VIU_VD2_FMT_W));
+				priv->io_base + _REG(VIU_VD2_FMT_W + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_canvas0,
-				priv->io_base + _REG(VD1_IF0_CANVAS0));
+				priv->io_base + _REG(VD1_IF0_CANVAS0 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_canvas0,
-				priv->io_base + _REG(VD1_IF0_CANVAS1));
+				priv->io_base + _REG(VD1_IF0_CANVAS1 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_canvas0,
-				priv->io_base + _REG(VD2_IF0_CANVAS0));
+				priv->io_base + _REG(VD2_IF0_CANVAS0 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_canvas0,
-				priv->io_base + _REG(VD2_IF0_CANVAS1));
+				priv->io_base + _REG(VD2_IF0_CANVAS1 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_luma_x0,
-				priv->io_base + _REG(VD1_IF0_LUMA_X0));
+				priv->io_base + _REG(VD1_IF0_LUMA_X0 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_luma_x0,
-				priv->io_base + _REG(VD1_IF0_LUMA_X1));
+				priv->io_base + _REG(VD1_IF0_LUMA_X1 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_luma_x0,
-				priv->io_base + _REG(VD2_IF0_LUMA_X0));
+				priv->io_base + _REG(VD2_IF0_LUMA_X0 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_luma_x0,
-				priv->io_base + _REG(VD2_IF0_LUMA_X1));
+				priv->io_base + _REG(VD2_IF0_LUMA_X1 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_luma_y0,
-				priv->io_base + _REG(VD1_IF0_LUMA_Y0));
+				priv->io_base + _REG(VD1_IF0_LUMA_Y0 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_luma_y0,
-				priv->io_base + _REG(VD1_IF0_LUMA_Y1));
+				priv->io_base + _REG(VD1_IF0_LUMA_Y1 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_luma_y0,
-				priv->io_base + _REG(VD2_IF0_LUMA_Y0));
+				priv->io_base + _REG(VD2_IF0_LUMA_Y0 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_luma_y0,
-				priv->io_base + _REG(VD2_IF0_LUMA_Y1));
+				priv->io_base + _REG(VD2_IF0_LUMA_Y1 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_chroma_x0,
-				priv->io_base + _REG(VD1_IF0_CHROMA_X0));
+				priv->io_base + _REG(VD1_IF0_CHROMA_X0 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_chroma_x0,
-				priv->io_base + _REG(VD1_IF0_CHROMA_X1));
+				priv->io_base + _REG(VD1_IF0_CHROMA_X1 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_chroma_x0,
-				priv->io_base + _REG(VD2_IF0_CHROMA_X0));
+				priv->io_base + _REG(VD2_IF0_CHROMA_X0 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_chroma_x0,
-				priv->io_base + _REG(VD2_IF0_CHROMA_X1));
+				priv->io_base + _REG(VD2_IF0_CHROMA_X1 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_chroma_y0,
-				priv->io_base + _REG(VD1_IF0_CHROMA_Y0));
+				priv->io_base + _REG(VD1_IF0_CHROMA_Y0 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_chroma_y0,
-				priv->io_base + _REG(VD1_IF0_CHROMA_Y1));
+				priv->io_base + _REG(VD1_IF0_CHROMA_Y1 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_chroma_y0,
-				priv->io_base + _REG(VD2_IF0_CHROMA_Y0));
+				priv->io_base + _REG(VD2_IF0_CHROMA_Y0 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_chroma_y0,
-				priv->io_base + _REG(VD2_IF0_CHROMA_Y1));
+				priv->io_base + _REG(VD2_IF0_CHROMA_Y1 + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_repeat_loop,
-				priv->io_base + _REG(VD1_IF0_RPT_LOOP));
+				priv->io_base + _REG(VD1_IF0_RPT_LOOP + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_repeat_loop,
-				priv->io_base + _REG(VD2_IF0_RPT_LOOP));
+				priv->io_base + _REG(VD2_IF0_RPT_LOOP + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_luma0_rpt_pat,
-				priv->io_base + _REG(VD1_IF0_LUMA0_RPT_PAT));
+				priv->io_base + _REG(VD1_IF0_LUMA0_RPT_PAT + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_luma0_rpt_pat,
-				priv->io_base + _REG(VD2_IF0_LUMA0_RPT_PAT));
+				priv->io_base + _REG(VD2_IF0_LUMA0_RPT_PAT + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_luma0_rpt_pat,
-				priv->io_base + _REG(VD1_IF0_LUMA1_RPT_PAT));
+				priv->io_base + _REG(VD1_IF0_LUMA1_RPT_PAT + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_luma0_rpt_pat,
-				priv->io_base + _REG(VD2_IF0_LUMA1_RPT_PAT));
+				priv->io_base + _REG(VD2_IF0_LUMA1_RPT_PAT + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_chroma0_rpt_pat,
-				priv->io_base + _REG(VD1_IF0_CHROMA0_RPT_PAT));
+				priv->io_base + _REG(VD1_IF0_CHROMA0_RPT_PAT + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_chroma0_rpt_pat,
-				priv->io_base + _REG(VD2_IF0_CHROMA0_RPT_PAT));
+				priv->io_base + _REG(VD2_IF0_CHROMA0_RPT_PAT + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_chroma0_rpt_pat,
-				priv->io_base + _REG(VD1_IF0_CHROMA1_RPT_PAT));
+				priv->io_base + _REG(VD1_IF0_CHROMA1_RPT_PAT + 0x17b0));
 		writel_relaxed(priv->viu.vd1_if0_chroma0_rpt_pat,
-				priv->io_base + _REG(VD2_IF0_CHROMA1_RPT_PAT));
-		writel_relaxed(0, priv->io_base + _REG(VD1_IF0_LUMA_PSEL));
-		writel_relaxed(0, priv->io_base + _REG(VD1_IF0_CHROMA_PSEL));
-		writel_relaxed(0, priv->io_base + _REG(VD2_IF0_LUMA_PSEL));
-		writel_relaxed(0, priv->io_base + _REG(VD2_IF0_CHROMA_PSEL));
+				priv->io_base + _REG(VD2_IF0_CHROMA1_RPT_PAT + 0x17b0));
+		writel_relaxed(0, priv->io_base + _REG(VD1_IF0_LUMA_PSEL + 0x17b0));
+		writel_relaxed(0, priv->io_base + _REG(VD1_IF0_CHROMA_PSEL + 0x17b0));
+		writel_relaxed(0, priv->io_base + _REG(VD2_IF0_LUMA_PSEL + 0x17b0));
+		writel_relaxed(0, priv->io_base + _REG(VD2_IF0_CHROMA_PSEL + 0x17b0));
 		writel_relaxed(priv->viu.vd1_range_map_y,
-				priv->io_base + _REG(VD1_IF0_RANGE_MAP_Y));
+				priv->io_base + _REG(VD1_IF0_RANGE_MAP_Y + 0x17b0));
 		writel_relaxed(priv->viu.vd1_range_map_cb,
-				priv->io_base + _REG(VD1_IF0_RANGE_MAP_CB));
+				priv->io_base + _REG(VD1_IF0_RANGE_MAP_CB + 0x17b0));
 		writel_relaxed(priv->viu.vd1_range_map_cr,
-				priv->io_base + _REG(VD1_IF0_RANGE_MAP_CR));
+				priv->io_base + _REG(VD1_IF0_RANGE_MAP_CR + 0x17b0));
 		writel_relaxed(0x78404,
 				priv->io_base + _REG(VPP_SC_MISC));
 		writel_relaxed(priv->viu.vpp_pic_in_height,
