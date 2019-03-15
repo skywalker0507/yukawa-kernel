@@ -102,6 +102,12 @@
 	phy-mode = "rmii";
 };
 
+&i2c3 {
+	status = "okay";
+	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
+	pinctrl-names = "default";
+};
+
 /* SD card */
 &sd_emmc_b {
 	status = "okay";
