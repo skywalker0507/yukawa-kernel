@@ -502,12 +502,14 @@ static int axg_card_set_fe_link(struct snd_soc_card *card,
 
 static int axg_card_cpu_is_capture_fe(struct device_node *np)
 {
-	return of_device_is_compatible(np, PREFIX "axg-toddr");
+	return of_device_is_compatible(np, PREFIX "axg-toddr") ||
+		of_device_is_compatible(np, PREFIX "g12a-toddr");
 }
 
 static int axg_card_cpu_is_playback_fe(struct device_node *np)
 {
-	return of_device_is_compatible(np, PREFIX "axg-frddr");
+	return of_device_is_compatible(np, PREFIX "axg-frddr") ||
+		of_device_is_compatible(np, PREFIX "g12a-frddr");
 }
 
 static int axg_card_cpu_is_tdm_iface(struct device_node *np)
