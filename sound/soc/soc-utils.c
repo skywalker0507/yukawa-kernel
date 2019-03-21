@@ -8,6 +8,8 @@
 //         Liam Girdwood <lrg@slimlogic.co.uk>
 
 #include <linux/platform_device.h>
+#include <linux/of_platform.h>
+#include <linux/module.h>
 #include <linux/export.h>
 #include <sound/core.h>
 #include <sound/pcm.h>
@@ -348,9 +350,17 @@ static int snd_soc_dummy_probe(struct platform_device *pdev)
 	return ret;
 }
 
+static const struct of_device_id soc_dummy_of_match[] = {
+	{
+		.compatible = "sound,dummy",
+	}, {}
+};
+MODULE_DEVICE_TABLE(of, soc_dummy_of_match);
+
 static struct platform_driver soc_dummy_driver = {
 	.driver = {
 		.name = "snd-soc-dummy",
+		.of_match_table = soc_dummy_of_match,
 	},
 	.probe = snd_soc_dummy_probe,
 };
