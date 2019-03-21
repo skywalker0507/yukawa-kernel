@@ -22,25 +22,12 @@
 #include <linux/reset.h>
 #include <linux/slab.h>
 #include <linux/regmap.h>
+#include <linux/dma-mapping.h>
 #include <media/cec.h>
 #include <media/cec-notifier.h>
-#include <linux/clk-provider.h>
+#include <linux/clk/meson/providers.h>
 
 /* CEC Registers */
-
-#define CECB_CLK_CNTL_REG0		0x00
-
-#define CECB_CLK_CNTL_N1		GENMASK(11, 0)
-#define CECB_CLK_CNTL_N2		GENMASK(23, 12)
-#define CECB_CLK_CNTL_DUAL_EN		BIT(28)
-#define CECB_CLK_CNTL_OUTPUT_EN		BIT(30)
-#define CECB_CLK_CNTL_INPUT_EN		BIT(31)
-
-#define CECB_CLK_CNTL_REG1		0x04
-
-#define CECB_CLK_CNTL_M1		GENMASK(11, 0)
-#define CECB_CLK_CNTL_M2		GENMASK(23, 12)
-#define CECB_CLK_CNTL_BYPASS_EN		BIT(24)
 
 /*
  * [14:12] Filter_del. For glitch-filtering CEC line, ignore signal
@@ -165,6 +152,8 @@
 
 #define CECB_WAKEUPCTRL		0x31
 
+#define CEC_CLK_RATE		32768
+
 struct meson_ao_cec_g12a_device {
 	struct platform_device		*pdev;
 	struct regmap			*regmap;
@@ -173,7 +162,7 @@ struct meson_ao_cec_g12a_device {
 	struct cec_notifier		*notify;
 	struct cec_adapter		*adap;
 	struct cec_msg			rx_msg;
-	struct clk			*oscin;
+	struct platform_device		*pdev_clk;
 	struct clk			*core;
 };
 
@@ -184,178 +173,37 @@ static const struct regmap_config meson_ao_cec_g12a_regmap_conf = {
 	.max_register = CECB_INTR_STAT_REG,
 };
 
-/*
- * The AO-CECB embeds a dual/divider to generate a more precise
- * 32,768KHz clock for CEC core clock.
- *                      ______   ______
- *                     |      | |      |
- *         ______      | Div1 |-| Cnt1 |       ______
- *        |      |    /|______| |______|\     |      |
- * Xtal-->| Gate |---|  ______   ______  X-X--| Gate |-->
- *        |______| |  \|      | |      |/  |  |______|
- *                 |   | Div2 |-| Cnt2 |   |
- *                 |   |______| |______|   |
- *                 |_______________________|
- *
- * The dividing can be switched to single or dual, with a counter
- * for each divider to set when the switching is done.
- * The entire dividing mechanism can be also bypassed.
- */
-
-struct meson_ao_cec_g12a_dualdiv_clk {
-	struct clk_hw hw;
-	struct regmap *regmap;
-};
-
-#define hw_to_meson_ao_cec_g12a_dualdiv_clk(_hw)			\
-	container_of(_hw, struct meson_ao_cec_g12a_dualdiv_clk, hw)	\
-
-static unsigned long
-meson_ao_cec_g12a_dualdiv_clk_recalc_rate(struct clk_hw *hw,
-					  unsigned long parent_rate)
-{
-	struct meson_ao_cec_g12a_dualdiv_clk *dualdiv_clk =
-		hw_to_meson_ao_cec_g12a_dualdiv_clk(hw);
-	unsigned long n1;
-	u32 reg0, reg1;
-
-	regmap_read(dualdiv_clk->regmap, CECB_CLK_CNTL_REG0, &reg0);
-	regmap_read(dualdiv_clk->regmap, CECB_CLK_CNTL_REG0, &reg1);
-
-	if (reg1 & CECB_CLK_CNTL_BYPASS_EN)
-		return parent_rate;
-
-	if (reg0 & CECB_CLK_CNTL_DUAL_EN) {
-		unsigned long n2, m1, m2, f1, f2, p1, p2;
-
-		n1 = FIELD_GET(CECB_CLK_CNTL_N1, reg0) + 1;
-		n2 = FIELD_GET(CECB_CLK_CNTL_N2, reg0) + 1;
-
-		m1 = FIELD_GET(CECB_CLK_CNTL_M1, reg1) + 1;
-		m2 = FIELD_GET(CECB_CLK_CNTL_M1, reg1) + 1;
-
-		f1 = DIV_ROUND_CLOSEST(parent_rate, n1);
-		f2 = DIV_ROUND_CLOSEST(parent_rate, n2);
-
-		p1 = DIV_ROUND_CLOSEST(100000000 * m1, f1 * (m1 + m2));
-		p2 = DIV_ROUND_CLOSEST(100000000 * m2, f2 * (m1 + m2));
-
-		return DIV_ROUND_UP(100000000, p1 + p2);
-	}
-
-	n1 = FIELD_GET(CECB_CLK_CNTL_N1, reg0) + 1;
-
-	return DIV_ROUND_CLOSEST(parent_rate, n1);
-}
-
-static int meson_ao_cec_g12a_dualdiv_clk_enable(struct clk_hw *hw)
-{
-	struct meson_ao_cec_g12a_dualdiv_clk *dualdiv_clk =
-		hw_to_meson_ao_cec_g12a_dualdiv_clk(hw);
-
-
-	/* Disable Input & Output */
-	regmap_update_bits(dualdiv_clk->regmap, CECB_CLK_CNTL_REG0,
-			   CECB_CLK_CNTL_INPUT_EN | CECB_CLK_CNTL_OUTPUT_EN,
-			   0);
-
-	/* Set N1 & N2 */
-	regmap_update_bits(dualdiv_clk->regmap, CECB_CLK_CNTL_REG0,
-			   CECB_CLK_CNTL_N1,
-			   FIELD_PREP(CECB_CLK_CNTL_N1, 733 - 1));
-
-	regmap_update_bits(dualdiv_clk->regmap, CECB_CLK_CNTL_REG0,
-			   CECB_CLK_CNTL_N2,
-			   FIELD_PREP(CECB_CLK_CNTL_N2, 732 - 1));
-
-	/* Set M1 & M2 */
-	regmap_update_bits(dualdiv_clk->regmap, CECB_CLK_CNTL_REG1,
-			   CECB_CLK_CNTL_M1,
-			   FIELD_PREP(CECB_CLK_CNTL_M1, 8 - 1));
-
-	regmap_update_bits(dualdiv_clk->regmap, CECB_CLK_CNTL_REG1,
-			   CECB_CLK_CNTL_M2,
-			   FIELD_PREP(CECB_CLK_CNTL_M2, 11 - 1));
-
-	/* Enable Dual divisor */
-	regmap_update_bits(dualdiv_clk->regmap, CECB_CLK_CNTL_REG0,
-			   CECB_CLK_CNTL_DUAL_EN, CECB_CLK_CNTL_DUAL_EN);
-
-	/* Disable divisor bypass */
-	regmap_update_bits(dualdiv_clk->regmap, CECB_CLK_CNTL_REG1,
-			   CECB_CLK_CNTL_BYPASS_EN, 0);
-
-	/* Enable Input & Output */
-	regmap_update_bits(dualdiv_clk->regmap, CECB_CLK_CNTL_REG0,
-			   CECB_CLK_CNTL_INPUT_EN | CECB_CLK_CNTL_OUTPUT_EN,
-			   CECB_CLK_CNTL_INPUT_EN | CECB_CLK_CNTL_OUTPUT_EN);
-
-	return 0;
-}
-
-static void meson_ao_cec_g12a_dualdiv_clk_disable(struct clk_hw *hw)
-{
-	struct meson_ao_cec_g12a_dualdiv_clk *dualdiv_clk =
-		hw_to_meson_ao_cec_g12a_dualdiv_clk(hw);
-
-	regmap_update_bits(dualdiv_clk->regmap, CECB_CLK_CNTL_REG0,
-			   CECB_CLK_CNTL_INPUT_EN | CECB_CLK_CNTL_OUTPUT_EN,
-			   0);
-}
-
-static int meson_ao_cec_g12a_dualdiv_clk_is_enabled(struct clk_hw *hw)
-{
-	struct meson_ao_cec_g12a_dualdiv_clk *dualdiv_clk =
-		hw_to_meson_ao_cec_g12a_dualdiv_clk(hw);
-	int val;
-
-	regmap_read(dualdiv_clk->regmap, CECB_CLK_CNTL_REG0, &val);
-
-	return !!(val & (CECB_CLK_CNTL_INPUT_EN | CECB_CLK_CNTL_OUTPUT_EN));
-}
-
-static const struct clk_ops meson_ao_cec_g12a_dualdiv_clk_ops = {
-	.recalc_rate	= meson_ao_cec_g12a_dualdiv_clk_recalc_rate,
-	.is_enabled	= meson_ao_cec_g12a_dualdiv_clk_is_enabled,
-	.enable		= meson_ao_cec_g12a_dualdiv_clk_enable,
-	.disable	= meson_ao_cec_g12a_dualdiv_clk_disable,
-};
-
+/* Register the sub-driver managing the 32K clock generator */
 static int meson_ao_cec_g12a_setup_clk(struct meson_ao_cec_g12a_device *ao_cec)
 {
-	struct meson_ao_cec_g12a_dualdiv_clk *dualdiv_clk;
 	struct device *dev = &ao_cec->pdev->dev;
-	struct clk_init_data init;
-	const char *parent_name;
-	struct clk *clk;
-	char *name;
+	struct meson_clk_provider_data data;
+	struct platform_device_info pdevinfo;
+	struct meson_clk_provider_ops *ops;
+	const char *input_name = "oscin";
 
-	dualdiv_clk = devm_kzalloc(dev, sizeof(*dualdiv_clk), GFP_KERNEL);
-	if (!dualdiv_clk)
-		return -ENOMEM;
+	data.regmap = ao_cec->regmap;
+	data.input_names = &input_name;
+	data.input_count = 1;
 
-	name = kasprintf(GFP_KERNEL, "%s#dualdiv_clk", dev_name(dev));
-	if (!name)
-		return -ENOMEM;
+	memset(&pdevinfo, 0, sizeof(pdevinfo));
+	pdevinfo.parent = dev;
+	pdevinfo.id = PLATFORM_DEVID_AUTO;
+	pdevinfo.name = "meson-ao-cec-g12a-clk";
+	pdevinfo.data = &data;
+	pdevinfo.size_data = sizeof(data);
+	pdevinfo.dma_mask = DMA_BIT_MASK(32);
 
-	parent_name = __clk_get_name(ao_cec->oscin);
-
-	init.name = name;
-	init.ops = &meson_ao_cec_g12a_dualdiv_clk_ops;
-	init.flags = 0;
-	init.parent_names = &parent_name;
-	init.num_parents = 1;
-	dualdiv_clk->regmap = ao_cec->regmap;
-	dualdiv_clk->hw.init = &init;
-
-	clk = devm_clk_register(dev, &dualdiv_clk->hw);
-	kfree(name);
-	if (IS_ERR(clk)) {
-		dev_err(dev, "failed to register clock\n");
-		return PTR_ERR(clk);
+	ao_cec->pdev_clk = platform_device_register_full(&pdevinfo);
+	if (IS_ERR(ao_cec->pdev_clk)) {
+		dev_err(dev, "Failed to register clock device\n");
+		return PTR_ERR(ao_cec->pdev_clk);
 	}
 
-	ao_cec->core = clk;
+	ops = meson_clk_provider_get_ops(ao_cec->pdev_clk);
+	ao_cec->core = ops->clk_get(ao_cec->pdev_clk, "core");
+	if (IS_ERR(ao_cec->core))
+		return PTR_ERR(ao_cec->core);
 
 	return 0;
 }
@@ -697,21 +545,20 @@ static int meson_ao_cec_g12a_probe(struct platform_device *pdev)
 		goto out_probe_adapter;
 	}
 
-	ao_cec->oscin = devm_clk_get(&pdev->dev, "oscin");
-	if (IS_ERR(ao_cec->oscin)) {
-		dev_err(&pdev->dev, "oscin clock request failed\n");
-		ret = PTR_ERR(ao_cec->oscin);
-		goto out_probe_adapter;
-	}
-
 	ret = meson_ao_cec_g12a_setup_clk(ao_cec);
 	if (ret)
-		goto out_probe_clk;
+		goto out_probe_adapter;
+
+	ret = clk_set_rate(ao_cec->core, CEC_CLK_RATE);
+	if (ret) {
+		dev_err(&pdev->dev, "core clock set rate failed\n");
+		goto out_probe_adapter;
+	}
 
 	ret = clk_prepare_enable(ao_cec->core);
 	if (ret) {
 		dev_err(&pdev->dev, "core clock enable failed\n");
-		goto out_probe_clk;
+		goto out_probe_adapter;
 	}
 
 	device_reset_optional(&pdev->dev);
@@ -721,7 +568,7 @@ static int meson_ao_cec_g12a_probe(struct platform_device *pdev)
 	ret = cec_register_adapter(ao_cec->adap, &pdev->dev);
 	if (ret < 0) {
 		cec_notifier_put(ao_cec->notify);
-		goto out_probe_core_clk;
+		goto out_probe_clk;
 	}
 
 	/* Setup Hardware */
@@ -731,11 +578,8 @@ static int meson_ao_cec_g12a_probe(struct platform_device *pdev)
 
 	return 0;
 
-out_probe_core_clk:
-	clk_disable_unprepare(ao_cec->core);
-
 out_probe_clk:
-	clk_disable_unprepare(ao_cec->oscin);
+	clk_disable_unprepare(ao_cec->core);
 
 out_probe_adapter:
 	cec_delete_adapter(ao_cec->adap);
@@ -752,7 +596,9 @@ static int meson_ao_cec_g12a_remove(struct platform_device *pdev)
 {
 	struct meson_ao_cec_g12a_device *ao_cec = platform_get_drvdata(pdev);
 
-	clk_disable_unprepare(ao_cec->oscin);
+	clk_disable_unprepare(ao_cec->core);
+
+	platform_device_unregister(ao_cec->pdev_clk);
 
 	cec_unregister_adapter(ao_cec->adap);
 

@@ -583,6 +583,7 @@ config VIDEO_MESON_G12A_AO_CEC
 	depends on ARCH_MESON || COMPILE_TEST
 	select CEC_CORE
 	select CEC_NOTIFIER
+	select COMMON_CLK_G12A_AO_CEC
 	---help---
 	  This is a driver for Amlogic Meson G12A SoCs AO CEC interface.
 	  This driver if for the new AO-CEC module found in G12A SoCs,
