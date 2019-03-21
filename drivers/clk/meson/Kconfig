@@ -94,6 +94,16 @@ config COMMON_CLK_AXG_AUDIO
 	  Support for the audio clock controller on AmLogic A113D devices,
 	  aka axg, Say Y if you want audio subsystem to work.
 
+config COMMON_CLK_G12A_AO_CEC
+	tristate "Meson G12A AO CEC Clock divider"
+	depends on ARCH_MESON
+	select COMMON_CLK_MESON_REGMAP
+	select COMMON_CLK_MESON_DUALDIV
+	select REGMAP_MMIO
+	help
+	  Support for the CEC Clock divider AmLogic G12A devices,
+	  aka axg, Say Y if you want the G12A AO CEC to work.
+
 config COMMON_CLK_G12A
 	bool
 	depends on ARCH_MESON
