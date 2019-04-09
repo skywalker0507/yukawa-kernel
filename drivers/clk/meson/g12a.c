@@ -374,7 +374,7 @@ static struct clk_regmap g12b_cpu_clk = {
 };
 
 /* Datasheet names this field as "premux0" */
-static struct clk_regmap g12b_cpub_clk_dyn0_sel = {
+static struct clk_regmap g12b_cpub_clk_premux0 = {
 	.data = &(struct clk_regmap_mux_data){
 		.offset = HHI_SYS_CPUB_CLK_CNTL,
 		.mask = 0x3,
@@ -391,7 +391,7 @@ static struct clk_regmap g12b_cpub_clk_dyn0_sel = {
 };
 
 /* Datasheet names this field as "mux0_divn_tcnt" */
-static struct clk_regmap g12b_cpub_clk_dyn0_div = {
+static struct clk_regmap g12b_cpub_clk_mux0_div = {
 	.data = &(struct clk_regmap_div_data){
 		.offset = HHI_SYS_CPUB_CLK_CNTL,
 		.shift = 4,
@@ -406,7 +406,7 @@ static struct clk_regmap g12b_cpub_clk_dyn0_div = {
 };
 
 /* Datasheet names this field as "postmux0" */
-static struct clk_regmap g12b_cpub_clk_dyn0 = {
+static struct clk_regmap g12b_cpub_clk_postmux0 = {
 	.data = &(struct clk_regmap_mux_data){
 		.offset = HHI_SYS_CPUB_CLK_CNTL,
 		.mask = 0x1,
@@ -422,7 +422,7 @@ static struct clk_regmap g12b_cpub_clk_dyn0 = {
 };
 
 /* Datasheet names this field as "premux1" */
-static struct clk_regmap g12b_cpub_clk_dyn1_sel = {
+static struct clk_regmap g12b_cpub_clk_premux1 = {
 	.data = &(struct clk_regmap_mux_data){
 		.offset = HHI_SYS_CPUB_CLK_CNTL,
 		.mask = 0x3,
@@ -439,7 +439,7 @@ static struct clk_regmap g12b_cpub_clk_dyn1_sel = {
 };
 
 /* Datasheet names this field as "Mux1_divn_tcnt" */
-static struct clk_regmap g12b_cpub_clk_dyn1_div = {
+static struct clk_regmap g12b_cpub_clk_mux1_div = {
 	.data = &(struct clk_regmap_div_data){
 		.offset = HHI_SYS_CPUB_CLK_CNTL,
 		.shift = 20,
@@ -454,7 +454,7 @@ static struct clk_regmap g12b_cpub_clk_dyn1_div = {
 };
 
 /* Datasheet names this field as "postmux1" */
-static struct clk_regmap g12b_cpub_clk_dyn1 = {
+static struct clk_regmap g12b_cpub_clk_postmux1 = {
 	.data = &(struct clk_regmap_mux_data){
 		.offset = HHI_SYS_CPUB_CLK_CNTL,
 		.mask = 0x1,
@@ -3208,12 +3208,12 @@ static struct clk_hw_onecell_data g12b_hw_onecell_data = {
 		[CLKID_VDEC_HEVCF]		= &g12a_vdec_hevcf.hw,
 		[CLKID_SYS1_PLL_DCO]		= &g12b_sys1_pll_dco.hw,
 		[CLKID_SYS1_PLL]		= &g12b_sys1_pll.hw,
-		[CLKID_CPUB_CLK_DYN0_SEL]	= &g12b_cpub_clk_dyn0_sel.hw,
-		[CLKID_CPUB_CLK_DYN0_DIV]	= &g12b_cpub_clk_dyn0_div.hw,
-		[CLKID_CPUB_CLK_DYN0]		= &g12b_cpub_clk_dyn0.hw,
-		[CLKID_CPUB_CLK_DYN1_SEL]	= &g12b_cpub_clk_dyn1_sel.hw,
-		[CLKID_CPUB_CLK_DYN1_DIV]	= &g12b_cpub_clk_dyn1_div.hw,
-		[CLKID_CPUB_CLK_DYN1]		= &g12b_cpub_clk_dyn1.hw,
+		[CLKID_CPUB_CLK_DYN0_SEL]	= &g12b_cpub_clk_premux0.hw,
+		[CLKID_CPUB_CLK_DYN0_DIV]	= &g12b_cpub_clk_mux0_div.hw,
+		[CLKID_CPUB_CLK_DYN0]		= &g12b_cpub_clk_postmux0.hw,
+		[CLKID_CPUB_CLK_DYN1_SEL]	= &g12b_cpub_clk_premux1.hw,
+		[CLKID_CPUB_CLK_DYN1_DIV]	= &g12b_cpub_clk_mux1_div.hw,
+		[CLKID_CPUB_CLK_DYN1]		= &g12b_cpub_clk_postmux1.hw,
 		[CLKID_CPUB_CLK_DYN]		= &g12b_cpub_clk_dyn.hw,
 		[CLKID_CPUB_CLK]		= &g12b_cpub_clk.hw,
 		[NR_CLKS]			= NULL,
@@ -3416,12 +3416,12 @@ static struct clk_regmap *const g12a_clk_regmaps[] = {
 	&g12b_cpu_clk,
 	&g12b_sys1_pll_dco,
 	&g12b_sys1_pll,
-	&g12b_cpub_clk_dyn0_sel,
-	&g12b_cpub_clk_dyn0_div,
-	&g12b_cpub_clk_dyn0,
-	&g12b_cpub_clk_dyn1_sel,
-	&g12b_cpub_clk_dyn1_div,
-	&g12b_cpub_clk_dyn1,
+	&g12b_cpub_clk_premux0,
+	&g12b_cpub_clk_mux0_div,
+	&g12b_cpub_clk_postmux0,
+	&g12b_cpub_clk_premux1,
+	&g12b_cpub_clk_mux1_div,
+	&g12b_cpub_clk_postmux1,
 	&g12b_cpub_clk_dyn,
 	&g12b_cpub_clk,
 };
