@@ -107,7 +107,7 @@ DEFINE_DRM_GEM_CMA_FOPS(fops);
 static struct drm_driver meson_driver = {
 	.driver_features	= DRIVER_HAVE_IRQ | DRIVER_GEM |
 				  DRIVER_MODESET | DRIVER_PRIME |
-				  DRIVER_ATOMIC,
+				  DRIVER_ATOMIC | DRIVER_RENDER,
 
 	/* IRQ */
 	.irq_handler		= meson_irq,
