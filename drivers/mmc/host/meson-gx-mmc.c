@@ -135,6 +135,10 @@
 #define SD_EMMC_CMD_TIMEOUT_DATA 4096 /* in ms */
 #define SD_EMMC_CFG_CMD_GAP 16 /* in clock cycles */
 #define SD_EMMC_DESC_BUF_LEN PAGE_SIZE
+#define SD_EMMC_SRAM_DATA_BUF_LEN 1024
+#define SD_EMMC_SRAM_DATA_BUF_OFF 0x400
+#define SD_EMMC_SRAM_DESC_BUF_LEN 512
+#define SD_EMMC_SRAM_DESC_BUF_OFF 0x200
 
 #define SD_EMMC_PRE_REQ_DONE BIT(0)
 #define SD_EMMC_DESC_CHAIN_MODE BIT(1)
@@ -167,6 +171,8 @@ struct meson_host {
 	struct clk *mmc_clk;
 	unsigned long req_rate;
 	bool ddr;
+
+	bool ddr_access_quirk;
 
 	struct pinctrl *pinctrl;
 	struct pinctrl_state *pins_default;
@@ -232,6 +238,7 @@ static struct mmc_command *meson_mmc_get_next_command(struct mmc_command *cmd)
 static void meson_mmc_get_transfer_mode(struct mmc_host *mmc,
 					struct mmc_request *mrq)
 {
+	struct meson_host *host = mmc_priv(mmc);	
 	struct mmc_data *data = mrq->data;
 	struct scatterlist *sg;
 	int i;
@@ -244,6 +251,9 @@ static void meson_mmc_get_transfer_mode(struct mmc_host *mmc,
 	 * for command SD_IO_RW_EXTENDED.
 	 */
 	if (mrq->cmd->opcode == SD_IO_RW_EXTENDED)
+		return;
+
+	if (host->ddr_access_quirk)
 		return;
 
 	for_each_sg(data->sg, sg, data->sg_len, i)
@@ -1049,6 +1059,10 @@ static int meson_mmc_probe(struct platform_device *pdev)
 	host->dev = &pdev->dev;
 	dev_set_drvdata(&pdev->dev, host);
 
+	/* The G12A SDIO Controller needs an SRAM bounce buffer */
+	host->ddr_access_quirk = device_property_read_bool(&pdev->dev,
+					"amlogic,ddr-access-quirk");
+
 	/* Get regulators and the supported OCR mask */
 	host->vqmmc_enabled = false;
 	ret = mmc_regulator_get_supply(mmc);
@@ -1146,9 +1160,15 @@ static int meson_mmc_probe(struct platform_device *pdev)
 		goto err_init_clk;
 
 	mmc->caps |= MMC_CAP_CMD23;
-	mmc->max_blk_count = CMD_CFG_LENGTH_MASK;
+	if (host->ddr_access_quirk) {
+		/* Limit to the available sram memory */
+		mmc->max_blk_count = 1;
+		mmc->max_segs = 1;
+	} else {
+		mmc->max_blk_count = CMD_CFG_LENGTH_MASK;
+		mmc->max_segs = SD_EMMC_DESC_BUF_LEN / sizeof(struct sd_emmc_desc);
+	}
 	mmc->max_req_size = mmc->max_blk_count * mmc->max_blk_size;
-	mmc->max_segs = SD_EMMC_DESC_BUF_LEN / sizeof(struct sd_emmc_desc);
 	mmc->max_seg_size = mmc->max_req_size;
 
 	/*
@@ -1158,23 +1178,38 @@ static int meson_mmc_probe(struct platform_device *pdev)
 	 */
 	mmc->caps2 &= ~MMC_CAP2_HS400;
 
-	/* data bounce buffer */
-	host->bounce_buf_size = mmc->max_req_size;
-	host->bounce_buf =
-		dma_alloc_coherent(host->dev, host->bounce_buf_size,
-				   &host->bounce_dma_addr, GFP_KERNEL);
-	if (host->bounce_buf == NULL) {
-		dev_err(host->dev, "Unable to map allocate DMA bounce buffer.\n");
-		ret = -ENOMEM;
-		goto err_free_irq;
-	}
+	if (host->ddr_access_quirk) {
+		/*
+		 * The MMC Controller embeds 1,5KiB of internal SRAM
+		 * that can be used to store descriptor and bounce buffer.
+		 * In the case of the G12A SDIO controller, use these
+		 * instead of the DDR memory
+		 */
+		host->bounce_buf_size = SD_EMMC_SRAM_DATA_BUF_LEN;
+		host->bounce_buf = host->regs + SD_EMMC_SRAM_DATA_BUF_OFF;
+		host->bounce_dma_addr = res->start + SD_EMMC_SRAM_DATA_BUF_OFF;
+		host->descs = host->regs + SD_EMMC_SRAM_DESC_BUF_OFF;
+		host->descs_dma_addr = res->start + SD_EMMC_SRAM_DESC_BUF_OFF;
+	} else {
+		/* data bounce buffer */
+		host->bounce_buf_size = mmc->max_req_size;
+		host->bounce_buf =
+			dma_alloc_coherent(host->dev, host->bounce_buf_size,
+					   &host->bounce_dma_addr, GFP_KERNEL);
+		if (host->bounce_buf == NULL) {
+			dev_err(host->dev, "Unable to map allocate DMA bounce buffer.\n");
+			ret = -ENOMEM;
+			goto err_free_irq;
+		}
 
-	host->descs = dma_alloc_coherent(host->dev, SD_EMMC_DESC_BUF_LEN,
-		      &host->descs_dma_addr, GFP_KERNEL);
-	if (!host->descs) {
-		dev_err(host->dev, "Allocating descriptor DMA buffer failed\n");
-		ret = -ENOMEM;
-		goto err_bounce_buf;
+		host->descs = dma_alloc_coherent(host->dev,
+			      SD_EMMC_DESC_BUF_LEN,
+			      &host->descs_dma_addr, GFP_KERNEL);
+		if (!host->descs) {
+			dev_err(host->dev, "Allocating descriptor DMA buffer failed\n");
+			ret = -ENOMEM;
+			goto err_bounce_buf;
+		}
 	}
 
 	mmc->ops = &meson_mmc_ops;
@@ -1206,10 +1241,12 @@ static int meson_mmc_remove(struct platform_device *pdev)
 	writel(0, host->regs + SD_EMMC_IRQ_EN);
 	free_irq(host->irq, host);
 
-	dma_free_coherent(host->dev, SD_EMMC_DESC_BUF_LEN,
-			  host->descs, host->descs_dma_addr);
-	dma_free_coherent(host->dev, host->bounce_buf_size,
-			  host->bounce_buf, host->bounce_dma_addr);
+	if (!host->ddr_access_quirk) {
+		dma_free_coherent(host->dev, SD_EMMC_DESC_BUF_LEN,
+				  host->descs, host->descs_dma_addr);
+		dma_free_coherent(host->dev, host->bounce_buf_size,
+				  host->bounce_buf, host->bounce_dma_addr);
+	}
 
 	clk_disable_unprepare(host->mmc_clk);
 	clk_disable_unprepare(host->core_clk);
