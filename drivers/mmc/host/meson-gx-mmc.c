@@ -23,7 +23,6 @@
 #include <linux/init.h>
 #include <linux/delay.h>
 #include <linux/device.h>
-#include <linux/iopoll.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
 #include <linux/ioport.h>
@@ -1115,6 +1114,7 @@ out:
 
 static int meson_mmc_wait_desc_stop(struct meson_host *host)
 {
+	int loop;
 	u32 status;
 
 	/*
@@ -1124,10 +1124,20 @@ static int meson_mmc_wait_desc_stop(struct meson_host *host)
 	 * If we don't confirm the descriptor is stopped, it might raise new
 	 * IRQs after we have called mmc_request_done() which is bad.
 	 */
+	for (loop = 50; loop; loop--) {
+		status = readl(host->regs + SD_EMMC_STATUS);
+		if (status & (STATUS_BUSY | STATUS_DESC_BUSY))
+			udelay(100);
+		else
+			break;
+	}
 
-	return readl_poll_timeout(host->regs + SD_EMMC_STATUS, status,
-				  !(status & (STATUS_BUSY | STATUS_DESC_BUSY)),
-				  100, 5000);
+	if (status & (STATUS_BUSY | STATUS_DESC_BUSY)) {
+		dev_err(host->dev, "Timed out waiting for host to stop\n");
+		return -ETIMEDOUT;
+	}
+
+	return 0;
 }
 
 static irqreturn_t meson_mmc_irq_thread(int irq, void *dev_id)
