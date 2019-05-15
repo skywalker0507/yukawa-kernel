@@ -1096,6 +1096,9 @@ static irqreturn_t meson_mmc_irq(int irq, void *dev_id)
 	}
 
 out:
+	/* ack all enabled interrupts */
+	writel(irq_en, host->regs + SD_EMMC_STATUS);
+
 	if (cmd->error) {
 		/* Stop desc in case of errors */
 		u32 start = readl(host->regs + SD_EMMC_START);
@@ -1106,9 +1109,6 @@ out:
 
 	if (ret == IRQ_HANDLED)
 		meson_mmc_request_done(host->mmc, cmd->mrq);
-
-	/* ack all raised interrupts */
-	writel(status, host->regs + SD_EMMC_STATUS);
 
 	return ret;
 }
