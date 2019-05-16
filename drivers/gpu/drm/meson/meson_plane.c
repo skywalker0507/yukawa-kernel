@@ -343,10 +343,16 @@ static void meson_plane_atomic_disable(struct drm_plane *plane,
 	struct meson_drm *priv = meson_plane->priv;
 
 	/* Disable OSD1 */
-	if (meson_vpu_is_compatible(priv, "amlogic,meson-g12a-vpu"))
-		writel_bits_relaxed(BIT(0) | BIT(21), 0,
-			priv->io_base + _REG(VIU_OSD1_CTRL_STAT));
-	else
+	if (meson_vpu_is_compatible(priv, "amlogic,meson-g12a-vpu")) {
+		writel_relaxed(0, priv->io_base +
+			       _REG(VIU_OSD_BLEND_DIN0_SCOPE_H));
+		writel_relaxed(0, priv->io_base +
+			       _REG(VIU_OSD_BLEND_DIN0_SCOPE_V));
+		writel_relaxed(0, priv->io_base +
+			       _REG(VIU_OSD_BLEND_BLEND0_SIZE));
+		writel_relaxed(0, priv->io_base +
+			       _REG(VIU_OSD_BLEND_BLEND1_SIZE));
+	} else
 		writel_bits_relaxed(VPP_OSD1_POSTBLEND, 0,
 				    priv->io_base + _REG(VPP_MISC));
 
