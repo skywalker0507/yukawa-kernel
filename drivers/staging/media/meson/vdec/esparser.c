@@ -284,8 +284,9 @@ esparser_queue(struct amvdec_session *sess, struct vb2_v4l2_buffer *vbuf)
 	if (sess->fmt_out->pixfmt == V4L2_PIX_FMT_VP9)
 		num_dst_bufs -= 2;
 
-	if (esparser_vififo_get_free_space(sess) < payload_size ||
-	    atomic_read(&sess->esparser_queued_bufs) >= num_dst_bufs)
+	if (sess->status == STATUS_RUNNING &&
+	    (esparser_vififo_get_free_space(sess) < payload_size ||
+	     atomic_read(&sess->esparser_queued_bufs) >= num_dst_bufs))
 		return -EAGAIN;
 
 	v4l2_m2m_src_buf_remove_by_buf(sess->m2m_ctx, vbuf);
@@ -311,16 +312,7 @@ esparser_queue(struct amvdec_session *sess, struct vb2_v4l2_buffer *vbuf)
 		return 0;
 	}
 
-	/* We need to wait until we parse the first keyframe.
-	 * All buffers prior to the first keyframe must be dropped.
-	 */
-	if (!sess->keyframe_found)
-		usleep_range(1000, 2000);
-
-	if (sess->keyframe_found)
-		atomic_inc(&sess->esparser_queued_bufs);
-	else
-		amvdec_remove_ts(sess, vb->timestamp);
+	atomic_inc(&sess->esparser_queued_bufs);
 
 	vbuf->flags = 0;
 	vbuf->field = V4L2_FIELD_NONE;

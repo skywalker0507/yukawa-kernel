@@ -165,6 +165,7 @@ struct amvdec_format {
 
 enum amvdec_status {
 	STATUS_STOPPED,
+	STATUS_INIT,
 	STATUS_RUNNING,
 	STATUS_NEEDS_RESUME,
 };
@@ -239,6 +240,7 @@ struct amvdec_session {
 	unsigned int should_stop;
 	unsigned int keyframe_found;
 	unsigned int num_dst_bufs;
+	unsigned int changed_format;
 
 	u8 canvas_alloc[MAX_CANVAS];
 	u32 canvas_num;

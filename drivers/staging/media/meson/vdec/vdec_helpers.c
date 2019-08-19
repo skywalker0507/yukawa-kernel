@@ -314,7 +314,7 @@ static void dst_buf_done(struct amvdec_session *sess,
 		dev_dbg(dev, "should_stop, %u bufs remain\n",
 			atomic_read(&sess->esparser_queued_bufs));
 
-	dev_dbg(dev, "Buffer %u done\n", vbuf->vb2_buf.index);
+	dev_dbg(dev, "Buffer %u done, ts = %llu\n", vbuf->vb2_buf.index, timestamp);
 	vbuf->field = field;
 	v4l2_m2m_buf_done(vbuf, VB2_BUF_STATE_DONE);
 
@@ -382,16 +382,18 @@ void amvdec_dst_buf_done_offset(struct amvdec_session *sess,
 
 		/* Delete any timestamp entry that appears before our target
 		 * (not all src packets/timestamps lead to a frame)
+		 * TODO: Don't drop with this logic, packets must be kept
+		 * longer
 		 */
-		if (delta > 0 || delta < -1 * (s32)sess->vififo_size) {
+		/*if (delta > 0 || delta < -1 * (s32)sess->vififo_size) {
 			atomic_dec(&sess->esparser_queued_bufs);
 			list_del(&tmp->list);
 			kfree(tmp);
-		}
+		}*/
 	}
 
 	if (!match) {
-		dev_dbg(dev, "Buffer %u done but can't match offset (%08X)\n",
+		dev_err(dev, "Buffer %u done but can't match offset (%08X)\n",
 			vbuf->vb2_buf.index, offset);
 	} else {
 		timestamp = match->ts;
@@ -461,6 +463,7 @@ void amvdec_src_change(struct amvdec_session *sess, u32 width,
 		return;
 	}
 
+	sess->changed_format = 0;
 	sess->width = width;
 	sess->height = height;
 	sess->status = STATUS_NEEDS_RESUME;
