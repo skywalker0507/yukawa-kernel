@@ -361,7 +361,7 @@ static const struct amvdec_format vdec_formats_g12a[] = {
 		.vdec_ops = &vdec_1_ops,
 		.codec_ops = &codec_h264_ops,
 		.firmware_path = "meson/vdec/g12a_h264.bin",
-		.pixfmts_cap = { V4L2_PIX_FMT_NV12M, 0 },
+		.pixfmts_cap = { V4L2_PIX_FMT_NV12, V4L2_PIX_FMT_NV12M, 0 },
 	}, {
 		.pixfmt = V4L2_PIX_FMT_MPEG1,
 		.min_buffers = 8,
