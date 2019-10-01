@@ -1,0 +1,12 @@
+--- drivers/gpu/drm/meson/meson_crtc.c
++++ drivers/gpu/drm/meson/meson_crtc.c
+@@ -23,7 +23,9 @@
+ #include "meson_registers.h"
+ #include "meson_venc.h"
+ #include "meson_viu.h"
++#include "meson_rdma.h"
+ #include "meson_vpp.h"
++#include "meson_osd_afbcd.h"
+ 
+ #define MESON_G12A_VIU_OFFSET	0x5ec0
+ 
