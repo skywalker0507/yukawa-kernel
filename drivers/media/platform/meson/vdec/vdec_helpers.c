@@ -176,6 +176,44 @@ static int set_canvas_nv12m(struct amvdec_session *sess,
 	return 0;
 }
 
+static int set_canvas_nv12(struct amvdec_session *sess,
+			    struct vb2_buffer *vb, u32 width,
+			    u32 height, u32 reg)
+{
+	struct amvdec_core *core = sess->core;
+	u8 canvas_id[NUM_CANVAS_NV12]; /* Y U/V */
+	dma_addr_t buf_paddr_y, buf_paddr_uv;
+	int ret, i;
+
+	for (i = 0; i < NUM_CANVAS_NV12; ++i) {
+		ret = canvas_alloc(sess, &canvas_id[i]);
+		if (ret)
+			return ret;
+	}
+
+	buf_paddr_y = vb2_dma_contig_plane_dma_addr(vb, 0);
+	buf_paddr_uv = buf_paddr_y + amvdec_get_output_size(sess);
+
+	/* Y plane */
+	meson_canvas_config(core->canvas, canvas_id[0], buf_paddr_y,
+			    width, height, MESON_CANVAS_WRAP_NONE,
+			    MESON_CANVAS_BLKMODE_LINEAR,
+			    MESON_CANVAS_ENDIAN_SWAP64);
+
+	/* U/V plane */
+	meson_canvas_config(core->canvas, canvas_id[1], buf_paddr_uv,
+			    width, height / 2, MESON_CANVAS_WRAP_NONE,
+			    MESON_CANVAS_BLKMODE_LINEAR,
+			    MESON_CANVAS_ENDIAN_SWAP64);
+
+	amvdec_write_dos(core, reg,
+			 ((canvas_id[1]) << 16) |
+			 ((canvas_id[1]) << 8)  |
+			 (canvas_id[0]));
+
+	return 0;
+}
+
 int amvdec_set_canvases(struct amvdec_session *sess,
 			u32 reg_base[], u32 reg_num[])
 {
@@ -196,6 +234,12 @@ int amvdec_set_canvases(struct amvdec_session *sess,
 		reg_cur = reg_base[reg_base_cur] + reg_num_cur * 4;
 
 		switch (pixfmt) {
+		case V4L2_PIX_FMT_NV12:
+			ret = set_canvas_nv12(sess, &buf->vb.vb2_buf, width,
+					      height, reg_cur);
+			if (ret)
+				return ret;
+			break;
 		case V4L2_PIX_FMT_NV12M:
 			ret = set_canvas_nv12m(sess, &buf->vb.vb2_buf, width,
 					       height, reg_cur);
@@ -283,8 +327,13 @@ static void dst_buf_done(struct amvdec_session *sess,
 {
 	struct device *dev = sess->core->dev_dec;
 	u32 output_size = amvdec_get_output_size(sess);
+	uint8_t *dp = vb2_plane_vaddr(&vbuf->vb2_buf, 0);
 
 	switch (sess->pixfmt_cap) {
+	case V4L2_PIX_FMT_NV12:
+		vbuf->vb2_buf.planes[0].bytesused = output_size +
+						    output_size / 2;
+		break;
 	case V4L2_PIX_FMT_NV12M:
 		vbuf->vb2_buf.planes[0].bytesused = output_size;
 		vbuf->vb2_buf.planes[1].bytesused = output_size / 2;
@@ -298,10 +347,13 @@ static void dst_buf_done(struct amvdec_session *sess,
 		vbuf->vb2_buf.planes[0].bytesused =
 			amvdec_am21c_size(sess->width, sess->height);
 		break;
+	default:
+		dev_err(dev, "Unknown pixfmt %08X\n", sess->pixfmt_cap);
 	}
 
 	vbuf->vb2_buf.timestamp = timestamp;
 	vbuf->sequence = sess->sequence_cap++;
+	printk("Pixels: %02X %02X %02X %02X %02X\n", dp[0], dp[1000], dp[2000], dp[3000], dp[4000]);
 
 	if (sess->should_stop &&
 	    atomic_read(&sess->esparser_queued_bufs) <= 2) {
@@ -314,7 +366,7 @@ static void dst_buf_done(struct amvdec_session *sess,
 		dev_dbg(dev, "should_stop, %u bufs remain\n",
 			atomic_read(&sess->esparser_queued_bufs));
 
-	dev_dbg(dev, "Buffer %u done\n", vbuf->vb2_buf.index);
+	dev_dbg(dev, "Buffer %u done, ts = %llu\n", vbuf->vb2_buf.index, timestamp);
 	vbuf->field = field;
 	v4l2_m2m_buf_done(vbuf, VB2_BUF_STATE_DONE);
 
@@ -382,16 +434,18 @@ void amvdec_dst_buf_done_offset(struct amvdec_session *sess,
 
 		/* Delete any timestamp entry that appears before our target
 		 * (not all src packets/timestamps lead to a frame)
+		 * TODO: Don't drop with this logic, packets must be kept
+		 * longer
 		 */
-		if (delta > 0 || delta < -1 * (s32)sess->vififo_size) {
+		/*if (delta > 0 || delta < -1 * (s32)sess->vififo_size) {
 			atomic_dec(&sess->esparser_queued_bufs);
 			list_del(&tmp->list);
 			kfree(tmp);
-		}
+		}*/
 	}
 
 	if (!match) {
-		dev_dbg(dev, "Buffer %u done but can't match offset (%08X)\n",
+		dev_err(dev, "Buffer %u done but can't match offset (%08X)\n",
 			vbuf->vb2_buf.index, offset);
 	} else {
 		timestamp = match->ts;
@@ -461,6 +515,7 @@ void amvdec_src_change(struct amvdec_session *sess, u32 width,
 		return;
 	}
 
+	sess->changed_format = 0;
 	sess->width = width;
 	sess->height = height;
 	sess->status = STATUS_NEEDS_RESUME;

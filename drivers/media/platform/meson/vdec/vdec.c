@@ -226,11 +226,15 @@ static int vdec_queue_setup(struct vb2_queue *q,
 
 	switch (q->type) {
 	case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
-		sizes[0] = amvdec_get_output_size(sess);
+		sizes[0] = 4000000; /* TODO: remember size through s_fmt */
 		*num_planes = 1;
 		break;
 	case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
 		switch (sess->pixfmt_cap) {
+		case V4L2_PIX_FMT_NV12:
+			sizes[0] = output_size + output_size / 2;
+			*num_planes = 1;
+			break;
 		case V4L2_PIX_FMT_NV12M:
 			sizes[0] = output_size;
 			sizes[1] = output_size / 2;
@@ -255,6 +259,7 @@ static int vdec_queue_setup(struct vb2_queue *q,
 		return -EINVAL;
 	}
 
+	sess->changed_format = 1;
 	return 0;
 }
 
@@ -266,10 +271,11 @@ static void vdec_vb2_buf_queue(struct vb2_buffer *vb)
 
 	v4l2_m2m_buf_queue(m2m_ctx, vbuf);
 
-	if (!sess->streamon_out || !sess->streamon_cap)
+	if (!sess->streamon_out)
 		return;
 
-	if (vb->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE &&
+	if (sess->streamon_cap &&
+	    vb->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE &&
 	    vdec_codec_needs_recycle(sess))
 		vdec_queue_recycle(sess, vb);
 
@@ -294,15 +300,21 @@ static int vdec_start_streaming(struct vb2_queue *q, unsigned int count)
 	else
 		sess->streamon_cap = 1;
 
-	if (!sess->streamon_out || !sess->streamon_cap)
+	if (!sess->streamon_out)
 		return 0;
 
 	if (sess->status == STATUS_NEEDS_RESUME &&
-	    q->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
+	    q->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE &&
+	    sess->changed_format) {
 		codec_ops->resume(sess);
 		sess->status = STATUS_RUNNING;
 		return 0;
 	}
+
+	if (sess->status == STATUS_RUNNING ||
+	    sess->status == STATUS_NEEDS_RESUME ||
+	    sess->status == STATUS_INIT)
+		return 0;
 
 	sess->vififo_size = SIZE_VIFIFO;
 	sess->vififo_vaddr =
@@ -332,9 +344,9 @@ static int vdec_start_streaming(struct vb2_queue *q, unsigned int count)
 		sess->recycle_thread = kthread_run(vdec_recycle_thread, sess,
 						   "vdec_recycle");
 
-	sess->status = STATUS_RUNNING;
+	sess->status = STATUS_INIT;
 	core->cur_sess = sess;
-
+	schedule_work(&sess->esparser_queue_work);
 	return 0;
 
 vififo_free:
@@ -391,6 +403,7 @@ static void vdec_stop_streaming(struct vb2_queue *q)
 	struct vb2_v4l2_buffer *buf;
 
 	if (sess->status == STATUS_RUNNING ||
+	    sess->status == STATUS_INIT ||
 	    (sess->status == STATUS_NEEDS_RESUME &&
 	     (!sess->streamon_out || !sess->streamon_cap))) {
 		if (vdec_codec_needs_recycle(sess))
@@ -473,6 +486,7 @@ vdec_try_fmt_common(struct amvdec_session *sess, u32 size,
 	struct v4l2_plane_pix_format *pfmt = pixmp->plane_fmt;
 	const struct amvdec_format *fmts = sess->core->platform->formats;
 	const struct amvdec_format *fmt_out;
+	u32 output_size = 0;
 
 	memset(pfmt[0].reserved, 0, sizeof(pfmt[0].reserved));
 	memset(pixmp->reserved, 0, sizeof(pixmp->reserved));
@@ -483,50 +497,49 @@ vdec_try_fmt_common(struct amvdec_session *sess, u32 size,
 			pixmp->pixelformat = V4L2_PIX_FMT_MPEG2;
 			fmt_out = find_format(fmts, size, pixmp->pixelformat);
 		}
+	} else if (f->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
+		fmt_out = sess->fmt_out;
+	}
 
-		pfmt[0].sizeimage =
-			get_output_size(pixmp->width, pixmp->height);
+	pixmp->width  = clamp(pixmp->width,  (u32)256, fmt_out->max_width);
+	pixmp->height = clamp(pixmp->height, (u32)144, fmt_out->max_height);
+	output_size = get_output_size(pixmp->width, pixmp->height);
+
+	if (f->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
 		pfmt[0].bytesperline = 0;
 		pixmp->num_planes = 1;
 	} else if (f->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
-		fmt_out = sess->fmt_out;
 		if (!vdec_supports_pixfmt_cap(fmt_out, pixmp->pixelformat))
 			pixmp->pixelformat = fmt_out->pixfmts_cap[0];
 
 		memset(pfmt[1].reserved, 0, sizeof(pfmt[1].reserved));
-		if (pixmp->pixelformat == V4L2_PIX_FMT_NV12M) {
-			pfmt[0].sizeimage =
-				get_output_size(pixmp->width, pixmp->height);
+		if (pixmp->pixelformat == V4L2_PIX_FMT_NV12) {
+			pfmt[0].sizeimage = output_size + output_size / 2;
 			pfmt[0].bytesperline = ALIGN(pixmp->width, 64);
-
-			pfmt[1].sizeimage =
-			      get_output_size(pixmp->width, pixmp->height) / 2;
+			pixmp->num_planes = 1;
+		} else if (pixmp->pixelformat == V4L2_PIX_FMT_NV12M) {
+			pfmt[0].sizeimage = output_size;
+			pfmt[0].bytesperline = ALIGN(pixmp->width, 64);
+			pfmt[1].sizeimage = output_size / 2;
 			pfmt[1].bytesperline = ALIGN(pixmp->width, 64);
 			pixmp->num_planes = 2;
 		} else if (pixmp->pixelformat == V4L2_PIX_FMT_YUV420M) {
-			pfmt[0].sizeimage =
-				get_output_size(pixmp->width, pixmp->height);
+			pfmt[0].sizeimage = output_size;
 			pfmt[0].bytesperline = ALIGN(pixmp->width, 64);
-
-			pfmt[1].sizeimage =
-			      get_output_size(pixmp->width, pixmp->height) / 4;
+			pfmt[1].sizeimage = output_size / 4;
 			pfmt[1].bytesperline = ALIGN(pixmp->width, 64) / 2;
-
-			pfmt[2].sizeimage =
-			      get_output_size(pixmp->width, pixmp->height) / 4;
+			pfmt[2].sizeimage = output_size / 4;
 			pfmt[2].bytesperline = ALIGN(pixmp->width, 64) / 2;
 			pixmp->num_planes = 3;
 		} else if (pixmp->pixelformat == V4L2_PIX_FMT_AM21C) {
 			pfmt[0].sizeimage =
 				amvdec_am21c_size(pixmp->width, pixmp->height);
 			pfmt[0].bytesperline = 0;
+			pixmp->num_planes = 1;
 		}
 	} else {
 		return NULL;
 	}
-
-	pixmp->width  = clamp(pixmp->width,  (u32)256, fmt_out->max_width);
-	pixmp->height = clamp(pixmp->height, (u32)144, fmt_out->max_height);
 
 	if (pixmp->field == V4L2_FIELD_ANY)
 		pixmp->field = V4L2_FIELD_NONE;
