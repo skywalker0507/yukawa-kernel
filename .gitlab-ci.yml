@@ -1,0 +1,62 @@
+variables:
+  IMAGE_TAG: "2019-11-08-5"
+  BBCI_PATH: "/root/bbci/"
+  CI_BRANCH: "android-amlogic-bmeson-4.19"
+  DEFCONFIG: "meson_defconfig"
+
+stages:
+  - docker
+  - build
+  - boot
+
+build:docker:
+  stage: docker
+  tags: 
+    - bbci-docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  image: docker:stable
+  services:
+    - docker:dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull $CI_REGISTRY_IMAGE:$IMAGE_TAG && exit 0 || true
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$IMAGE_TAG --tag $CI_REGISTRY_IMAGE:latest gitlab-ci/
+    - docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG
+    - docker push $CI_REGISTRY_IMAGE:latest
+
+test:build:
+  stage: build
+  image: $CI_REGISTRY_IMAGE:$IMAGE_TAG
+  tags:
+    - bbci-docker
+  before_script:
+    - mkdir -p logs results $HOME/bbci/cache $HOME/crossbuild $HOME/data/toolchains
+    - ln -s log $HOME/bbci/logs
+  script:
+    - cp gitlab-ci/sources.yaml $BBCI_PATH
+    - cp gitlab-ci/labs.yaml $BBCI_PATH/labs.yaml
+    - cp gitlab-ci/targets.yaml $BBCI_PATH/targets.yaml
+    - sed -i 's,#DATADIR#,$PWD/results,' $BBCI_PATH/labs.yaml
+    - sed -i 's,#DATAURI#,$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/results,' $BBCI_PATH/labs.yaml
+    - gitlab-ci/bbci.sh $BBCI_PATH $CI_BRANCH $DEFCONFIG
+  artifacts:
+    when: always
+    paths:
+      - results/
+      - logs/
+
+test:boot:
+  stage: boot
+  image: $CI_REGISTRY_IMAGE:$IMAGE_TAG
+  tags:
+    - bbci-lava
+  script:
+    - exit 0
+  artifacts:
+    when: always
+    paths:
+      - results/

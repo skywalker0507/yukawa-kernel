@@ -1,0 +1,8 @@
+labs:
+  - name: gitlab-ci
+    hostname: gitlab-ci
+    lavauri: #LAVAURI#
+    datadir: #DATADIR#
+    datahost: gitlab-ci
+    datahost_baseuri: #DATAURI#
+    rootfs_baseuri: http://kernel.montjoie.ovh

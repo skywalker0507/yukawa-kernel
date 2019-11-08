@@ -1,0 +1,5 @@
+sources:
+  - name: android-amlogic-bmeson-4.19
+    directory: $HOME/kernel
+    gituri: https://android.googlesource.com/kernel/hikey-linaro.git
+    ltag: android-amlogic-bmeson-4.19

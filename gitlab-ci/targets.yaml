@@ -1,0 +1,118 @@
+targets:
+  - name: meson_defconfig
+    larch: arm64
+    subarch: default
+    flavour: defconfig
+    defconfig: meson_defconfig
+    full_tgt: dtbs Image modules LOADADDR=0x40008000
+    warnings: "-W1"
+configoverlays:
+  - name: crypto
+    list:
+      - config: CONFIG_CRYPTO_USER_API_HASH=m
+      - config: CONFIG_CRYPTO_USER_API_SKCIPHER=m
+      - config: CONFIG_CRYPTO_USER_API_RNG=m
+      - config: CONFIG_CRYPTO_TEST=m
+      - config: CONFIG_CRYPTO_XTS=m
+      - config: CONFIG_MD=y
+      - config: CONFIG_BLK_DEV_DM=y
+      - config: CONFIG_DM_CRYPT=y
+      - config: CONFIG_CRYPTO_MANAGER_DISABLE_TESTS
+        disable: True
+  - name: debug
+    list:
+      - config: CONFIG_DMA_API_DEBUG=y
+      - config: CONFIG_DEBUG_INFO=y
+      - config: CONFIG_DEBUG_KERNEL=y
+  - name: lavatest
+    list:
+      - config: CONFIG_SCSI=y
+      - config: CONFIG_BLK_DEV_SD=y
+      - config: CONFIG_VIRTIO_PCI=y
+      - config: CONFIG_VIRTIO_MMIO=y
+      - config: CONFIG_SCSI_VIRTIO=y
+      - config: CONFIG_VIRTIO_NET=y
+      - config: CONFIG_ATA=y
+      - config: CONFIG_PATA_CMD64X=y
+  - name: nosound
+    list:
+      - config: CONFIG_SOUND
+        disable: True
+  - name: nodrm
+    list:
+      - config: CONFIG_DRM
+        disable: True
+  - name: novideo
+    list:
+      - config: CONFIG_VIDEO_DEV
+        disable: True
+  - name: nomedia
+    list:
+      - config: CONFIG_MEDIA_SUPPORT
+        disable: True
+      - config: CONFIG_RC_MAP
+        disable: True
+  - name: noipv6
+    list:
+      - config: CONFIG_NF_LOG_IPV6
+        disable: True
+      - config: CONFIG_NF_NAT_IPV6
+        disable: True
+      - config: CONFIG_IPV6
+        disable: True
+  - name: nfsd
+    list:
+      - config: CONFIG_NFSD
+  - name: lavalab
+    list:
+      - config: CONFIG_USB_SERIAL=y
+      - config: CONFIG_USB_SERIAL_FTDI_SIO=y
+  - name: virtio
+    list:
+      - config: CONFIG_FB_VIRTUAL=y
+      - config: CONFIG_VIRT_DRIVERS=y
+      - config: CONFIG_DRM_VIRTIO_GPU=y
+      - config: CONFIG_DRM_QXL=y
+  - name: cutdown
+    list:
+      - config: CONFIG_NET_VENDOR_MELLANOX
+        disable: True
+      - config: CONFIG_NET_VENDOR_QUALCOMM
+        disable: True
+      - config: CONFIG_NET_VENDOR_BROADCOM
+        disable: True
+      - config: CONFIG_NET_VENDOR_MARVELL
+        disable: True
+      - config: CONFIG_NET_VENDOR_ATHEROS
+        disable: True
+      - config: CONFIG_WLAN_VENDOR_ATH
+        disable: True
+      - config: CONFIG_WLAN_VENDOR_MARVELL
+        disable: True
+      - config: CONFIG_WLAN_VENDOR_TI
+        disable: True
+      - config: CONFIG_WLAN_VENDOR_BROADCOM
+        disable: True
+      - config: CONFIG_BT
+        disable: True
+      - config: CONFIG_BTRFS_FS
+        disable: True
+  - name: nopm
+    comment: disable power management
+    list:
+      - config: CONFIG_PM_CLK
+        disable: True
+      - config: CONFIG_PM_SLEEP_SMP
+        disable: True
+      - config: CONFIG_PM_SLEEP
+        disable: True
+      - config: CONFIG_PM
+        disable: True
+  - name: hack
+    list:
+      - config: CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
+      - config: CONFIG_BT_HCIBTSDIO=y
+      - config: CONFIG_BT_SELFTEST=y
+      - config: CONFIG_BT_DEBUGFS=y
+      - config: CONFIG_BT_HCIUART_INTEL=y
+      - config: CONFIG_BT_HCIBFUSB=y
