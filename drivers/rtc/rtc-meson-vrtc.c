@@ -13,6 +13,8 @@
 
 struct meson_vrtc_data {
 	void __iomem *io_alarm;
+	void __iomem *cec_cfg;
+	void __iomem *exit_reason;
 	struct rtc_device *rtc;
 	unsigned long alarm_time;
 	bool enabled;
@@ -75,6 +77,22 @@ static int meson_vrtc_probe(struct platform_device *pdev)
 	if (IS_ERR(vrtc->io_alarm))
 		return PTR_ERR(vrtc->io_alarm);
 
+	vrtc->cec_cfg = devm_platform_ioremap_resource(pdev, 1);
+	if (IS_ERR(vrtc->cec_cfg))
+		return PTR_ERR(vrtc->cec_cfg);
+
+	/*
+	 * HACK: enable all the CEC config bits in the firmware
+	 *
+	 * c.f. aml-4.9/drivers/amlogic/cec/hdmi_ao_cec.[ch]
+	 * #define CEC_FUNC_CFG_ALL			0x2f
+	 */
+	/* writel_relaxed(0x2f, vrtc->cec_cfg); */
+
+	vrtc->exit_reason = devm_platform_ioremap_resource(pdev, 2);
+	if (IS_ERR(vrtc->exit_reason))
+		return PTR_ERR(vrtc->exit_reason);
+
 	device_init_wakeup(&pdev->dev, 1);
 
 	platform_set_drvdata(pdev, vrtc);
@@ -124,11 +142,15 @@ static int meson_vrtc_suspend(struct device *dev)
 static int meson_vrtc_resume(struct device *dev)
 {
 	struct meson_vrtc_data *vrtc = dev_get_drvdata(dev);
+	u32 exit_reason;
 
-	dev_dbg(dev, "%s\n", __func__);
+	exit_reason = readl_relaxed(vrtc->exit_reason) >> 28;
+	dev_warn(dev, "resume: firmware exit_reason = 0x%x\n", exit_reason);
 
 	vrtc->alarm_time = 0;
 	meson_vrtc_set_wakeup_time(vrtc, 0);
+
+	pm_wakeup_event(dev, 500);
 	return 0;
 }
 #endif
