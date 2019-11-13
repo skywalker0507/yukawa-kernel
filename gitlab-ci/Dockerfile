@@ -5,6 +5,7 @@ LABEL Description=" This image is for testing Linux with bbci"
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -qq
+RUN apt-get install -qq build-essential bison flex libncurses-dev libssl-dev libelf-dev bc device-tree-compiler kmod
 RUN apt-get install -qq git python3 python3-yaml python3-jinja2 wget
 
 # Setup system
@@ -21,3 +22,5 @@ RUN pip3 install lavacli
 
 # Install bbci
 RUN git clone --depth 1 https://github.com/montjoie/bbci.git /root/bbci
+
+RUN sed -i "s,'git describe','git describe --always'," /root/bbci/bbci.py

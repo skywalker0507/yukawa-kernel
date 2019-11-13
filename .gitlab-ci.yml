@@ -1,5 +1,5 @@
 variables:
-  IMAGE_TAG: "2019-11-08-5"
+  IMAGE_TAG: "2019-11-13-05"
   BBCI_PATH: "/root/bbci/"
   CI_BRANCH: "android-amlogic-bmeson-4.19"
   DEFCONFIG: "meson_defconfig"
@@ -34,20 +34,21 @@ test:build:
   tags:
     - bbci-docker
   before_script:
-    - mkdir -p logs results $HOME/bbci/cache $HOME/crossbuild $HOME/data/toolchains
-    - ln -s log $HOME/bbci/logs
-  script:
+    - mkdir -p results $HOME/bbci/cache $HOME/crossbuild $HOME/data/toolchains
     - cp gitlab-ci/sources.yaml $BBCI_PATH
     - cp gitlab-ci/labs.yaml $BBCI_PATH/labs.yaml
     - cp gitlab-ci/targets.yaml $BBCI_PATH/targets.yaml
-    - sed -i 's,#DATADIR#,$PWD/results,' $BBCI_PATH/labs.yaml
-    - sed -i 's,#DATAURI#,$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/results,' $BBCI_PATH/labs.yaml
+    - sed -i "s,#DATADIR#,$PWD/results," $BBCI_PATH/labs.yaml
+    - sed -i "s,#DATAURI#,$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/raw/results," $BBCI_PATH/labs.yaml
+    - sed -i "s,#LAVAURI#,$LAVAURI," $BBCI_PATH/labs.yaml
+    - cp $BBCI_PATH/labs.yaml results/
+    - git clone https://android.googlesource.com/kernel/hikey-linaro.git -b android-amlogic-bmeson-4.19 /root/kernel
+  script:
     - gitlab-ci/bbci.sh $BBCI_PATH $CI_BRANCH $DEFCONFIG
   artifacts:
     when: always
     paths:
       - results/
-      - logs/
 
 test:boot:
   stage: boot
