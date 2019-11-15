@@ -6,7 +6,7 @@ JOB_IDS=""
 RESULT=0
 
 for job in $1/* ; do
-    lava_job_id=`lavacli jobs submit $jobs`
+    lava_job_id=`lavacli jobs submit $job`
     echo $job: $lava_job_id | tee -a $2/lava-jobs.txt
     JOB_IDS="$JOB_IDS $lava_job_id"
 done
