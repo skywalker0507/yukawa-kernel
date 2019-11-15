@@ -7,17 +7,22 @@ RESULT=0
 
 for job in $1/* ; do
     lava_job_id=`lavacli jobs submit $job`
-    echo $job: $lava_job_id | tee -a $2/lava-jobs.txt
+    jobname=`basename $job .yaml`
+    echo $jobname: $lava_job_id | tee -a $2/lava-jobs.txt
+    eval "job_$lava_job_id='$jobname'"
     JOB_IDS="$JOB_IDS $lava_job_id"
 done
 
 for job in $JOB_IDS ; do
-    echo Waiting for $job
+    jobname=`eval echo '$'job_$job`
+    echo Waiting for $job ($jobname)
     lavacli jobs wait $job
 done
 
 for job in $JOB_IDS ; do
-    lavacli jobs logs $job | grep -a -v "{'case':" | tee $2/$job.log
+    jobname=`eval echo '$'job_$job`
+    echo Result for $job ($jobname)
+    lavacli jobs logs $job | grep -a -v "{'case':" > $2/$jobname.log
     lavacli jobs show $lava_job_id
     lavacli results $lava_job_id
     status=`lavacli jobs show $lava_job_id | grep -c Finished` || echo Failed
