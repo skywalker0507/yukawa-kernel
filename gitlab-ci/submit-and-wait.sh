@@ -22,10 +22,10 @@ for job in $JOB_IDS ; do
     lavacli results $lava_job_id
     status=`lavacli jobs show $lava_job_id | grep -c Finished` || echo Failed
     echo status $status
-    [[ "$status" -gt 0 ]] && RESULT=1
+    [ "$status" -gt 0 ] && RESULT=1
     fails=`lavacli results $lava_job_id | grep -c fail` || echo Success
     echo fails $fails
-    [[ "$fails" -eq 0 ]] && RESULT=1
+    [ "$fails" -eq 0 ] && RESULT=1
 done
 
 exit $RESULT
