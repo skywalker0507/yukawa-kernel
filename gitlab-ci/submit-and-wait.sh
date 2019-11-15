@@ -23,12 +23,12 @@ for job in $JOB_IDS ; do
     jobname=`eval echo '$'job_$job`
     echo "Result for $job ($jobname)"
     lavacli jobs logs $job | grep -a -v "{'case':" > $2/$jobname.log
-    lavacli jobs show $lava_job_id
-    lavacli results $lava_job_id
-    status=`lavacli jobs show $lava_job_id | grep -c Finished` || echo Failed
+    lavacli jobs show $job
+    lavacli results $job
+    status=`lavacli jobs show $job | grep -c Finished` || echo Failed
     echo status $status
     [ "$status" -gt 0 ] && RESULT=1
-    fails=`lavacli results $lava_job_id | grep -c fail` || echo Success
+    fails=`lavacli results $job | grep -c fail` || echo Success
     echo fails $fails
     [ "$fails" -eq 0 ] && RESULT=1
 done
