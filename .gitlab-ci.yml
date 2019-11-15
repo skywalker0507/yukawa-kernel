@@ -57,8 +57,9 @@ test:boot:
   tags:
     - bbci-lava
   script:
-    - exit 0
+    - sh gitlab-ci/submit-and-wait.sh $PWD/jobs $PWD/results
   artifacts:
     when: always
     paths:
       - results/
+      - jobs/
