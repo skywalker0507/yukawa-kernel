@@ -34,7 +34,7 @@ test:build:
   tags:
     - bbci-docker
   before_script:
-    - mkdir -p results $HOME/bbci/cache $HOME/crossbuild $HOME/data/toolchains
+    - mkdir -p jobs/ results $HOME/bbci/cache $HOME/crossbuild $HOME/data/toolchains
     - cp gitlab-ci/sources.yaml $BBCI_PATH
     - cp gitlab-ci/labs.yaml $BBCI_PATH/labs.yaml
     - cp gitlab-ci/targets.yaml $BBCI_PATH/targets.yaml
@@ -44,14 +44,16 @@ test:build:
     - git clone https://android.googlesource.com/kernel/hikey-linaro.git -b android-amlogic-bmeson-4.19 /root/kernel
   script:
     - gitlab-ci/bbci.sh $BBCI_PATH $CI_BRANCH $DEFCONFIG
+  after_script:
+    - find $HOME/bbci/cache -name "job-*.yaml" -exec cp {} jobs/ \;
   artifacts:
     when: always
     paths:
       - results/
+      - jobs/
 
 test:boot:
   stage: boot
-  image: $CI_REGISTRY_IMAGE:$IMAGE_TAG
   tags:
     - bbci-lava
   script:
