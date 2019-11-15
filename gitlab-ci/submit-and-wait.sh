@@ -15,13 +15,13 @@ done
 
 for job in $JOB_IDS ; do
     jobname=`eval echo '$'job_$job`
-    echo Waiting for $job ($jobname)
+    echo "Waiting for $job ($jobname)"
     lavacli jobs wait $job
 done
 
 for job in $JOB_IDS ; do
     jobname=`eval echo '$'job_$job`
-    echo Result for $job ($jobname)
+    echo "Result for $job ($jobname)"
     lavacli jobs logs $job | grep -a -v "{'case':" > $2/$jobname.log
     lavacli jobs show $lava_job_id
     lavacli results $lava_job_id
