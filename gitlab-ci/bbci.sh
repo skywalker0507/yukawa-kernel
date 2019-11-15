@@ -6,7 +6,7 @@ BBCI_PATH=$1
 SOURCE_NAME=$2
 TARGET_NAME=$3
 
-BBCI_OPTS="-d --nolog -s $SOURCE_NAME -t $TARGET_NAME"
+BBCI_OPTS="-d --nolog -s $SOURCE_NAME -t $TARGET_NAME -D amlogic"
 
 cd $BBCI_PATH
 
