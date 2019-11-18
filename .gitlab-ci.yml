@@ -44,7 +44,7 @@ test:build:
     - sed -i "s,#LAVAURI#,$LAVAURI," $BBCI_PATH/labs.yaml
     - git clone https://android.googlesource.com/kernel/hikey-linaro.git -b $CI_BRANCH /root/kernel
   script:
-    - gitlab-ci/bbci.sh $BBCI_PATH $CI_BRANCH $DEFCONFIG $BOARD_TAG
+    - gitlab-ci/bbci.sh $BBCI_PATH gitlabci $DEFCONFIG $BOARD_TAG
   after_script:
     - find $HOME/bbci/cache -name "job-*.yaml" -exec cp {} jobs/ \;
   artifacts:

@@ -21,4 +21,4 @@ RUN apt-get install -qq python3-pip
 RUN pip3 install lavacli
 
 # Install bbci
-RUN git clone --depth 1 https://github.com/superna9999/bbci.git -b yukawa /root/bbci
+RUN git clone --depth 1 https://github.com/montjoie/bbci.git -b yukawa /root/bbci
