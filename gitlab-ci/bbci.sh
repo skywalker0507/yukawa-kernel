@@ -5,8 +5,9 @@ set -xe
 BBCI_PATH=$1
 SOURCE_NAME=$2
 TARGET_NAME=$3
+BOARD_TAG=$4
 
-BBCI_OPTS="-d --nolog -s $SOURCE_NAME -t $TARGET_NAME -D amlogic"
+BBCI_OPTS="-d --nolog -s $SOURCE_NAME -t $TARGET_NAME -D $BOARD_TAG"
 
 cd $BBCI_PATH
 
