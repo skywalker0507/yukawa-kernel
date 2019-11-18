@@ -27,7 +27,7 @@ for job in $JOB_IDS ; do
     lavacli results $job
     status=`lavacli jobs show $job | grep -c Finished` || echo Failed
     echo status $status
-    [ "$status" -lt ! ] && RESULT=1
+    [ "$status" -lt 1 ] && RESULT=1
     fails=`lavacli results $job | grep -c fail` || echo Success
     echo fails $fails
     [ "$fails" -gt 0 ] && RESULT=1
