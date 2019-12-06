@@ -380,6 +380,7 @@
 	pinctrl-names = "default";
 	status = "okay";
 	hdmi-phandle = <&hdmi_tx>;
+	amlogic,ao-sysctrl = <&rti>;
 };
 
 &clkc_audio {
