@@ -243,7 +243,7 @@ static int codec_h264_load_extended_firmware(struct amvdec_session *sess,
 		return -ENOMEM;
 	}
 
-	memcpy(h264->ext_fw_vaddr, data, SIZE_EXT_FW);
+	memcpy(h264->ext_fw_vaddr, data + 16*SZ_1K, SIZE_EXT_FW);
 	sess->priv = h264;
 
 	return 0;
@@ -280,7 +280,7 @@ static void codec_h264_set_par(struct amvdec_session *sess)
 	sess->pixelaspect = par_table[ar_idc];
 }
 
-static void codec_h264_resume(struct amvdec_session *sess)
+static void codec_h264_resume(struct amvdec_session *sess, int changed)
 {
 	struct amvdec_core *core = sess->core;
 	struct codec_h264 *h264 = sess->priv;

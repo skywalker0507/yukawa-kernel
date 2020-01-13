@@ -321,7 +321,7 @@ esparser_queue(struct amvdec_session *sess, struct vb2_v4l2_buffer *vbuf)
 	offset = esparser_get_offset(sess);
 
 	amvdec_add_ts(sess, vb->timestamp, vbuf->timecode, offset, vbuf->flags);
-	dev_dbg(core->dev, "esparser: ts = %llu pld_size = %u offset = %08X flags = %08X\n",
+	dev_info(core->dev, "esparser: ts = %llu pld_size = %u offset = %08X flags = %08X\n",
 		vb->timestamp, payload_size, offset, vbuf->flags);
 
 	vbuf->flags = 0;
@@ -352,10 +352,42 @@ esparser_queue(struct amvdec_session *sess, struct vb2_v4l2_buffer *vbuf)
 		return 0;
 	}
 
+	if (codec_ops->notify)
+		codec_ops->notify(sess, payload_size);
+
 	atomic_inc(&sess->esparser_queued_bufs);
 	v4l2_m2m_buf_done(vbuf, VB2_BUF_STATE_DONE);
 
 	return 0;
+}
+
+void esparser_queue_direct(struct amvdec_session *sess,
+			   struct vb2_v4l2_buffer *vbuf)
+{
+	struct amvdec_core *core = sess->core;
+	struct amvdec_ops *vdec_ops = sess->fmt_out->vdec_ops;
+	struct vb2_buffer *vb = &vbuf->vb2_buf;
+	dma_addr_t phy = vb2_dma_contig_plane_dma_addr(vb, 0);
+	u8 *vaddr = vb2_plane_vaddr(vb, 0);
+	u32 payload_size = vb2_get_plane_payload(vb, 0);
+	u32 pad_size;
+	int i;
+
+	memset(vaddr + payload_size, 0, 1024);
+
+	/* Release previous src buffer */
+	if (sess->cur_direct_input_vbuf) {
+		sess->cur_direct_input_vbuf->flags = 0;
+		sess->cur_direct_input_vbuf->field = V4L2_FIELD_NONE;
+		sess->cur_direct_input_vbuf->sequence = sess->sequence_out++;
+		v4l2_m2m_buf_done(sess->cur_direct_input_vbuf,
+				  VB2_BUF_STATE_DONE);
+	}
+
+	v4l2_m2m_src_buf_remove_by_buf(sess->m2m_ctx, vbuf);
+	amvdec_add_ts(sess, vb->timestamp, vbuf->timecode, phy, vbuf->flags);
+	sess->cur_direct_input_vbuf = vbuf;
+	vdec_ops->process_input(sess, phy, payload_size);
 }
 
 void esparser_queue_all_src(struct work_struct *work)
@@ -363,14 +395,20 @@ void esparser_queue_all_src(struct work_struct *work)
 	struct v4l2_m2m_buffer *buf, *n;
 	struct amvdec_session *sess =
 		container_of(work, struct amvdec_session, esparser_queue_work);
+	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+	const struct amvdec_format *fmt_out = sess->fmt_out;
 
 	mutex_lock(&sess->lock);
 	v4l2_m2m_for_each_src_buf_safe(sess->m2m_ctx, buf, n) {
 		if (sess->should_stop)
 			break;
-
-		if (esparser_queue(sess, &buf->vb) < 0)
+		if (fmt_out->direct_input) {
+			if (!codec_ops->input_ready(sess))
+				break;
+			esparser_queue_direct(sess, &buf->vb);
+		} else if (esparser_queue(sess, &buf->vb) < 0) {
 			break;
+		}
 	}
 	mutex_unlock(&sess->lock);
 }

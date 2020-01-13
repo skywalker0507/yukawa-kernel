@@ -90,6 +90,7 @@ static int canvas_alloc(struct amvdec_session *sess, u8 *canvas_id)
 	if (ret)
 		return ret;
 
+	printk("Allocated canvas %u\n", *canvas_id);
 	sess->canvas_alloc[sess->canvas_num++] = *canvas_id;
 	return 0;
 }
@@ -220,7 +221,10 @@ int amvdec_set_canvases(struct amvdec_session *sess,
 			reg_num_cur = 0;
 		}
 
-		sess->fw_idx_to_vb2_idx[i++] = buf->vb.vb2_buf.index;
+		printk("mapping vb2 %u<->%u fw\n", buf->vb.vb2_buf.index, i);
+		sess->vb2_idx_to_fw_idx[buf->vb.vb2_buf.index] = i;
+		sess->fw_idx_to_vb2_idx[i] = buf->vb.vb2_buf.index;
+		i++;
 	}
 
 	return 0;
@@ -447,10 +451,11 @@ void amvdec_src_change(struct amvdec_session *sess, u32 width,
 	if (sess->width == width &&
 	    sess->height == height &&
 	    dpb_size <= sess->num_dst_bufs) {
-		sess->fmt_out->codec_ops->resume(sess);
+		sess->fmt_out->codec_ops->resume(sess, 0);
 		return;
 	}
 
+	printk("Sending event\n");
 	sess->changed_format = 0;
 	sess->width = width;
 	sess->height = height;

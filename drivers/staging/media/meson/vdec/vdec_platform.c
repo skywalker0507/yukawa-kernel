@@ -11,6 +11,7 @@
 #include "vdec_hevc.h"
 #include "codec_mpeg12.h"
 #include "codec_h264.h"
+#include "codec_h264_multi.h"
 #include "codec_vp9.h"
 
 static const struct amvdec_format vdec_formats_gxbb[] = {
@@ -71,11 +72,12 @@ static const struct amvdec_format vdec_formats_gxl[] = {
 		.max_width = 3840,
 		.max_height = 2160,
 		.vdec_ops = &vdec_1_ops,
-		.codec_ops = &codec_h264_ops,
-		.firmware_path = "meson/vdec/gxl_h264.bin",
+		.codec_ops = &codec_h264_multi_ops,
+		.firmware_path = "meson/vdec/gxl_h264_multi.bin",
 		.pixfmts_cap = { V4L2_PIX_FMT_NV12M, 0 },
 		.flags = V4L2_FMT_FLAG_COMPRESSED |
 			 V4L2_FMT_FLAG_DYN_RESOLUTION,
+		.direct_input = 1,
 	}, {
 		.pixfmt = V4L2_PIX_FMT_MPEG1,
 		.min_buffers = 8,

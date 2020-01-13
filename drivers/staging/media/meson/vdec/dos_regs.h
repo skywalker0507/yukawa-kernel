@@ -34,10 +34,16 @@
 #define DBLK_STATUS		0x254c
 
 #define GCLK_EN			0x260c
+#define MDEC_PIC_DC_MUX_CTRL	0x2634
 #define MDEC_PIC_DC_CTRL	0x2638
 #define MDEC_PIC_DC_STATUS	0x263c
 #define ANC0_CANVAS_ADDR	0x2640
+#define DBKR_CANVAS_ADDR	0x26c0
+#define DBKW_CANVAS_ADDR	0x26c4
+#define REC_CANVAS_ADDR		0x26c8
+#define CURR_CANVAS_CTRL	0x26cc
 #define MDEC_PIC_DC_THRESH	0x26e0
+#define MDEC_EXTIF_CFG1		0x2794
 
 /* Firmware interface registers */
 #define AV_SCRATCH_0		0x2700
@@ -62,11 +68,20 @@
 #define AV_SCRATCH_J		0x274c
 #define AV_SCRATCH_K		0x2750
 #define AV_SCRATCH_L		0x2754
+#define MDEC_DOUBLEW_CFG0	0x276c
 
 #define MPEG1_2_REG		0x3004
 #define PIC_HEAD_INFO		0x300c
 #define POWER_CTL_VLD		0x3020
+#define VIFF_BIT_CNT		0x3068
+#define PMV2_X			0x3088
+#define PMV3_X			0x3090
 #define M4_CONTROL_REG		0x30a4
+#define LAST_SLICE_MV_ADDR	0x30c0
+#define LAST_MVY		0x30c8
+#define VLD_C38			0x30e0
+#define VLD_C39			0x30e4
+#define VLD_C3D			0x30f4
 
 /* Stream Buffer (stbuf) regs */
 #define VLD_MEM_VIFIFO_START_PTR	0x3100
