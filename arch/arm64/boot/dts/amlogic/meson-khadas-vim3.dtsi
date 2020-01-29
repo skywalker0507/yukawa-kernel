@@ -4,14 +4,20 @@
  * Author: Neil Armstrong <narmstrong@baylibre.com>
  * Copyright (c) 2019 Christian Hewitt <christianshewitt@gmail.com>
  */
-
+#include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/gpio/meson-g12a-gpio.h>
 #include <dt-bindings/sound/meson-g12a-tohdmitx.h>
+#include <dt-bindings/clock/axg-audio-clkc.h>
+#include <dt-bindings/clock/g12a-clkc.h>
+#include <dt-bindings/clock/g12a-aoclkc.h>
 
 / {
 	model = "Khadas VIM3";
 
+<<<<<<< HEAD
 	aliases {
 		serial0 = &uart_AO;
 		ethernet0 = &ethmac;
@@ -21,6 +27,8 @@
 		stdout-path = "serial0:115200n8";
 	};
 
+=======
+>>>>>>> YUKAWA: create dtbo file for vim3l and sei610
 	memory@0 {
 		device_type = "memory";
 		reg = <0x0 0x0 0x0 0x80000000>;
