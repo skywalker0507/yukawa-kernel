@@ -141,9 +141,14 @@
 #define		VIU_SW_RESET_OSD1               BIT(0)
 #define VIU_MISC_CTRL0 0x1a06
 #define		VIU_CTRL0_VD1_AFBC_MASK         0x170000
+#define		VIU_CTRL0_AFBC_TO_VD1		BIT(20)
 #define VIU_MISC_CTRL1 0x1a07
 #define D2D3_INTF_LENGTH 0x1a08
 #define D2D3_INTF_CTRL0 0x1a09
+#define VD1_AFBCD0_MISC_CTRL 0x1a0a
+#define		VD1_AXI_SEL_AFBC		(1 << 12)
+#define		AFBC_VD1_SEL			(1 << 10)
+#define VD2_AFBCD1_MISC_CTRL 0x1a0b
 #define VIU_OSD1_CTRL_STAT 0x1a10
 #define		VIU_OSD1_OSD_BLK_ENABLE         BIT(0)
 #define		VIU_OSD1_POSTBLD_SRC_VD1        (1 << 8)
@@ -349,8 +354,6 @@
 #define VIU_OSD1_OETF_LUT_ADDR_PORT 0x1add
 #define VIU_OSD1_OETF_LUT_DATA_PORT 0x1ade
 #define AFBC_ENABLE 0x1ae0
-#define		AFBC_DEC_ENABLE	BIT(8)
-#define 	AFBC_FRM_START	BIT(0)
 #define AFBC_MODE 0x1ae1
 #define AFBC_SIZE_IN 0x1ae2
 #define AFBC_DEC_DEF_COLOR 0x1ae3
@@ -358,7 +361,7 @@
 #define AFBC_LBUF_DEPTH 0x1ae5
 #define AFBC_HEAD_BADDR 0x1ae6
 #define AFBC_BODY_BADDR 0x1ae7
-#define AFBC_OUT_XSCOPE 0x1ae8
+#define AFBC_SIZE_OUT 0x1ae8
 #define AFBC_OUT_YSCOPE 0x1ae9
 #define AFBC_STAT 0x1aea
 #define AFBC_VD_CFMT_CTRL 0x1aeb
