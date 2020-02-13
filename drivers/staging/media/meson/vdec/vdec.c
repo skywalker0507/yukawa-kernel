@@ -190,6 +190,8 @@ static int vdec_queue_setup(struct vb2_queue *q, unsigned int *num_buffers,
 {
 	struct amvdec_session *sess = vb2_get_drv_priv(q);
 	u32 output_size = amvdec_get_output_size(sess);
+	u32 am08c_size = amvdec_amfbc_size(sess->width, sess->height, 0);
+	u32 am10c_size = amvdec_amfbc_size(sess->width, sess->height, 1);
 
 	if (*num_planes) {
 		switch (q->type) {
@@ -211,6 +213,14 @@ static int vdec_queue_setup(struct vb2_queue *q, unsigned int *num_buffers,
 				    sizes[0] < output_size ||
 				    sizes[1] < output_size / 4 ||
 				    sizes[2] < output_size / 4)
+					return -EINVAL;
+				break;
+			case V4L2_PIX_FMT_AM08C:
+				if (*num_planes != 1 || sizes[0] < am08c_size)
+					return -EINVAL;
+				break;
+			case V4L2_PIX_FMT_AM10C:
+				if (*num_planes != 1 || sizes[0] < am10c_size)
 					return -EINVAL;
 				break;
 			default:
@@ -241,6 +251,14 @@ static int vdec_queue_setup(struct vb2_queue *q, unsigned int *num_buffers,
 			sizes[1] = output_size / 4;
 			sizes[2] = output_size / 4;
 			*num_planes = 3;
+			break;
+		case V4L2_PIX_FMT_AM08C:
+			sizes[0] = am08c_size;
+			*num_planes = 1;
+			break;
+		case V4L2_PIX_FMT_AM10C:
+			sizes[0] = am10c_size;
+			*num_planes = 1;
 			break;
 		default:
 			return -EINVAL;
@@ -545,6 +563,16 @@ vdec_try_fmt_common(struct amvdec_session *sess, u32 size,
 			pfmt[2].sizeimage = output_size / 2;
 			pfmt[2].bytesperline = ALIGN(pixmp->width, 32) / 2;
 			pixmp->num_planes = 3;
+		} else if (pixmp->pixelformat == V4L2_PIX_FMT_AM08C) {
+			pfmt[0].sizeimage =
+			      amvdec_amfbc_size(pixmp->width, pixmp->height, 0);
+			pfmt[0].bytesperline = 0;
+			pixmp->num_planes = 1;
+		} else if (pixmp->pixelformat == V4L2_PIX_FMT_AM10C) {
+			pfmt[0].sizeimage =
+			      amvdec_amfbc_size(pixmp->width, pixmp->height, 1);
+			pfmt[0].bytesperline = 0;
+			pixmp->num_planes = 1;
 		}
 	}
 

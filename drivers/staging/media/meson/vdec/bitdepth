@@ -1,0 +1,412 @@
+codec_hevc_common.c:19:	struct amvdec_core *core = sess->core;
+codec_hevc_common.c:20:	u32 body_size = amvdec_amfbc_body_size(sess->width, sess->height,
+codec_hevc_common.c:22:	u32 head_size = amvdec_amfbc_head_size(sess->width, sess->height);
+codec_hevc_common.c:24:	if (!codec_hevc_use_fbc(sess->pixfmt_cap, is_10bit)) {
+codec_hevc_common.c:31:			       sess->pixfmt_cap, is_10bit))
+codec_hevc_common.c:48:	struct amvdec_core *core = sess->core;
+codec_hevc_common.c:50:	u32 buf_num = v4l2_m2m_num_dst_bufs_ready(sess->m2m_ctx);
+codec_hevc_common.c:59:	v4l2_m2m_for_each_dst_buf(sess->m2m_ctx, buf) {
+codec_hevc_common.c:64:		if (codec_hevc_use_downsample(sess->pixfmt_cap, is_10bit))
+codec_hevc_common.c:69:		if (codec_hevc_use_fbc(sess->pixfmt_cap, is_10bit)) {
+codec_hevc_common.c:84:	if (codec_hevc_use_fbc(sess->pixfmt_cap, is_10bit))
+codec_hevc_common.c:103:	struct amvdec_core *core = sess->core;
+codec_hevc_common.c:106:	u32 pixfmt_cap = sess->pixfmt_cap;
+codec_hevc_common.c:112:	v4l2_m2m_for_each_dst_buf(sess->m2m_ctx, buf) {
+codec_hevc_common.c:144:	struct device *dev = sess->core->dev;
+codec_hevc_common.c:145:	u32 am21_size = amvdec_amfbc_size(sess->width, sess->height,
+codec_hevc_common.c:146:					  sess->bitdepth == 10 ? 1 : 0);
+codec_hevc_common.c:163:	struct device *dev = sess->core->dev;
+codec_hevc_common.c:165:	u32 am21_size = amvdec_amfbc_size(sess->width, sess->height,
+codec_hevc_common.c:166:					  sess->bitdepth == 10 ? 1 : 0);
+codec_hevc_common.c:168:	v4l2_m2m_for_each_dst_buf(sess->m2m_ctx, buf) {
+codec_hevc_common.c:189:	struct device *dev = sess->core->dev;
+codec_hevc_common.c:213:	struct device *dev = sess->core->dev;
+codec_hevc_common.c:222:	v4l2_m2m_for_each_dst_buf(sess->m2m_ctx, buf) {
+codec_hevc_common.c:244:	struct amvdec_core *core = sess->core;
+codec_hevc_common.c:247:	if (codec_hevc_use_downsample(sess->pixfmt_cap, is_10bit)) {
+codec_hevc_common.c:254:			       sess->pixfmt_cap, is_10bit)) {
+codec_hevc_common.c:276:	u32 size = amvdec_amfbc_size(sess->width, sess->height, is_10bit);
+codec_hevc_common.c:282:	if (sess->pixfmt_cap == V4L2_PIX_FMT_NV12M)
+codec_vp9.c:661:	struct codec_vp9 *vp9 = sess->priv;
+codec_vp9.c:671:				v4l2_m2m_buf_queue(sess->m2m_ctx, tmp->vbuf);
+codec_vp9.c:684:	struct codec_vp9 *vp9 = sess->priv;
+codec_vp9.c:712:	struct amvdec_core *core = sess->core;
+codec_vp9.c:739:	if (codec_hevc_use_mmu(revision, sess->pixfmt_cap, vp9->is_10bit)) {
+codec_vp9.c:756:	struct amvdec_core *core = sess->core;
+codec_vp9.c:828:	sess->priv = vp9;
+codec_vp9.c:839:	struct amvdec_core *core = sess->core;
+codec_vp9.c:840:	struct codec_vp9 *vp9 = sess->priv;
+codec_vp9.c:857:	struct amvdec_core *core = sess->core;
+codec_vp9.c:858:	struct codec_vp9 *vp9 = sess->priv;
+codec_vp9.c:864:	if (codec_hevc_use_downsample(sess->pixfmt_cap, vp9->is_10bit))
+codec_vp9.c:871:	if (codec_hevc_use_fbc(sess->pixfmt_cap, vp9->is_10bit)) {
+codec_vp9.c:877:	if (sess->pixfmt_cap == V4L2_PIX_FMT_NV12M) {
+codec_vp9.c:888:	if (codec_hevc_use_mmu(core->platform->revision, sess->pixfmt_cap,
+codec_vp9.c:905:		if (codec_hevc_use_fbc(sess->pixfmt_cap, vp9->is_10bit))
+codec_vp9.c:909:		if (sess->pixfmt_cap == V4L2_PIX_FMT_NV12M)
+codec_vp9.c:913:		if (sess->width >= 1280)
+codec_vp9.c:924:		if (!codec_hevc_use_fbc(sess->pixfmt_cap, vp9->is_10bit))
+codec_vp9.c:1090:	struct amvdec_core *core = sess->core;
+codec_vp9.c:1101:		if (codec_hevc_use_fbc(sess->pixfmt_cap, vp9->is_10bit)) {
+codec_vp9.c:1117:	struct amvdec_core *core = sess->core;
+codec_vp9.c:1159:	struct codec_vp9 *vp9 = sess->priv;
+codec_vp9.c:1168:	vbuf = v4l2_m2m_dst_buf_remove(sess->m2m_ctx);
+codec_vp9.c:1170:		dev_err(sess->core->dev, "No dst buffer available\n");
+codec_vp9.c:1178:		vbuf = v4l2_m2m_dst_buf_remove(sess->m2m_ctx);
+codec_vp9.c:1179:		v4l2_m2m_buf_queue(sess->m2m_ctx, old_vbuf);
+codec_vp9.c:1181:			dev_err(sess->core->dev, "No dst buffer available\n");
+codec_vp9.c:1212:	struct codec_vp9 *vp9 = sess->priv;
+codec_vp9.c:1220:		v4l2_m2m_buf_queue(sess->m2m_ctx, tmp->vbuf);
+codec_vp9.c:1230:	struct amvdec_core *core = sess->core;
+codec_vp9.c:1231:	struct codec_vp9 *vp9 = sess->priv;
+codec_vp9.c:1252:	if (codec_hevc_use_mmu(core->platform->revision, sess->pixfmt_cap,
+codec_vp9.c:1311:	struct codec_vp9 *vp9 = sess->priv;
+codec_vp9.c:1334:	struct codec_vp9 *vp9 = sess->priv;
+codec_vp9.c:1388:	struct codec_vp9 *vp9 = sess->priv;
+codec_vp9.c:2051:	struct amvdec_core *core = sess->core;
+codec_vp9.c:2052:	struct codec_vp9 *vp9 = sess->priv;
+codec_vp9.c:2069:	sess->keyframe_found = 1;
+vdec_hevc.c:28:	struct amvdec_core *core = sess->core;
+vdec_hevc.c:82:	struct amvdec_core *core = sess->core;
+vdec_hevc.c:86:	amvdec_write_dos(core, HEVC_STREAM_START_ADDR, sess->vififo_paddr);
+vdec_hevc.c:88:			 sess->vififo_paddr + sess->vififo_size);
+vdec_hevc.c:89:	amvdec_write_dos(core, HEVC_STREAM_RD_PTR, sess->vififo_paddr);
+vdec_hevc.c:90:	amvdec_write_dos(core, HEVC_STREAM_WR_PTR, sess->vififo_paddr);
+vdec_hevc.c:96:	struct amvdec_core *core = sess->core;
+vdec_hevc.c:110:	return readl_relaxed(sess->core->dos_base + HEVC_STREAM_LEVEL);
+vdec_hevc.c:115:	struct amvdec_core *core = sess->core;
+vdec_hevc.c:116:	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+vdec_hevc.c:123:	if (sess->priv)
+vdec_hevc.c:157:	struct amvdec_core *core = sess->core;
+vdec_hevc.c:158:	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+vdec_hevc.c:203:	ret = vdec_hevc_load_firmware(sess, sess->fmt_out->firmware_path);
+vdec_helpers.c:81:	return sess->pixfmt_cap == V4L2_PIX_FMT_AM08C ||
+vdec_helpers.c:82:	       sess->pixfmt_cap == V4L2_PIX_FMT_AM10C;
+vdec_helpers.c:90:	if (sess->canvas_num >= MAX_CANVAS) {
+vdec_helpers.c:91:		dev_err(sess->core->dev, "Reached max number of canvas\n");
+vdec_helpers.c:95:	ret = meson_canvas_alloc(sess->core->canvas, canvas_id);
+vdec_helpers.c:99:	sess->canvas_alloc[sess->canvas_num++] = *canvas_id;
+vdec_helpers.c:107:	struct amvdec_core *core = sess->core;
+vdec_helpers.c:151:	struct amvdec_core *core = sess->core;
+vdec_helpers.c:189:	u32 pixfmt = sess->pixfmt_cap;
+vdec_helpers.c:190:	u32 width = ALIGN(sess->width, 32);
+vdec_helpers.c:191:	u32 height = ALIGN(sess->height, 32);
+vdec_helpers.c:198:	v4l2_m2m_for_each_dst_buf(sess->m2m_ctx, buf) {
+vdec_helpers.c:218:			dev_err(sess->core->dev, "Unsupported pixfmt %08X\n",
+vdec_helpers.c:229:		sess->fw_idx_to_vb2_idx[i++] = buf->vb.vb2_buf.index;
+vdec_helpers.c:248:	spin_lock_irqsave(&sess->ts_spinlock, flags);
+vdec_helpers.c:249:	list_add_tail(&new_ts->list, &sess->timestamps);
+vdec_helpers.c:250:	spin_unlock_irqrestore(&sess->ts_spinlock, flags);
+vdec_helpers.c:259:	spin_lock_irqsave(&sess->ts_spinlock, flags);
+vdec_helpers.c:260:	list_for_each_entry(tmp, &sess->timestamps, list) {
+vdec_helpers.c:267:	dev_warn(sess->core->dev_dec,
+vdec_helpers.c:271:	spin_unlock_irqrestore(&sess->ts_spinlock, flags);
+vdec_helpers.c:280:	struct device *dev = sess->core->dev_dec;
+vdec_helpers.c:283:	switch (sess->pixfmt_cap) {
+vdec_helpers.c:295:			amvdec_amfbc_size(sess->width, sess->height, 0);
+vdec_helpers.c:299:			amvdec_amfbc_size(sess->width, sess->height, 1);
+vdec_helpers.c:304:	vbuf->sequence = sess->sequence_cap++;
+vdec_helpers.c:308:	if (sess->should_stop &&
+vdec_helpers.c:309:	    atomic_read(&sess->esparser_queued_bufs) <= 1) {
+vdec_helpers.c:313:			sess->sequence_cap - 1);
+vdec_helpers.c:314:		v4l2_event_queue_fh(&sess->fh, &ev);
+vdec_helpers.c:316:	} else if (sess->status == STATUS_NEEDS_RESUME) {
+vdec_helpers.c:319:		sess->sequence_cap = 0;
+vdec_helpers.c:320:	} else if (sess->should_stop)
+vdec_helpers.c:322:			atomic_read(&sess->esparser_queued_bufs));
+vdec_helpers.c:330:	schedule_work(&sess->esparser_queue_work);
+vdec_helpers.c:336:	struct device *dev = sess->core->dev_dec;
+vdec_helpers.c:338:	struct list_head *timestamps = &sess->timestamps;
+vdec_helpers.c:344:	spin_lock_irqsave(&sess->ts_spinlock, flags);
+vdec_helpers.c:350:		spin_unlock_irqrestore(&sess->ts_spinlock, flags);
+vdec_helpers.c:360:	spin_unlock_irqrestore(&sess->ts_spinlock, flags);
+vdec_helpers.c:363:	atomic_dec(&sess->esparser_queued_bufs);
+vdec_helpers.c:371:	struct device *dev = sess->core->dev_dec;
+vdec_helpers.c:379:	spin_lock_irqsave(&sess->ts_spinlock, flags);
+vdec_helpers.c:382:	list_for_each_entry_safe(tmp, n, &sess->timestamps, list) {
+vdec_helpers.c:408:	spin_unlock_irqrestore(&sess->ts_spinlock, flags);
+vdec_helpers.c:412:		atomic_dec(&sess->esparser_queued_bufs);
+vdec_helpers.c:420:	struct device *dev = sess->core->dev_dec;
+vdec_helpers.c:422:	vbuf = v4l2_m2m_dst_buf_remove_by_idx(sess->m2m_ctx,
+vdec_helpers.c:423:					      sess->fw_idx_to_vb2_idx[buf_idx]);
+vdec_helpers.c:444:	sess->pixelaspect.numerator = sess->height * dar_num;
+vdec_helpers.c:445:	sess->pixelaspect.denominator = sess->width * dar_den;
+vdec_helpers.c:446:	div = gcd(sess->pixelaspect.numerator, sess->pixelaspect.denominator);
+vdec_helpers.c:447:	sess->pixelaspect.numerator /= div;
+vdec_helpers.c:448:	sess->pixelaspect.denominator /= div;
+vdec_helpers.c:459:	v4l2_ctrl_s_ctrl(sess->ctrl_min_buf_capture, dpb_size);
+vdec_helpers.c:465:	if (sess->width == width &&
+vdec_helpers.c:466:	    sess->height == height &&
+vdec_helpers.c:467:	    dpb_size <= sess->num_dst_bufs &&
+vdec_helpers.c:468:	    sess->bitdepth == bitdepth) {
+vdec_helpers.c:469:		sess->fmt_out->codec_ops->resume(sess);
+vdec_helpers.c:473:	sess->changed_format = 0;
+vdec_helpers.c:474:	sess->width = width;
+vdec_helpers.c:475:	sess->height = height;
+vdec_helpers.c:476:	sess->status = STATUS_NEEDS_RESUME;
+vdec_helpers.c:477:	sess->bitdepth = bitdepth;
+vdec_helpers.c:479:	if (sess->pixfmt_cap == V4L2_PIX_FMT_AM08C &&
+vdec_helpers.c:481:		sess->pixfmt_cap = V4L2_PIX_FMT_AM10C;
+vdec_helpers.c:482:	else if (sess->pixfmt_cap == V4L2_PIX_FMT_AM10C &&
+vdec_helpers.c:484:		 sess->pixfmt_cap = V4L2_PIX_FMT_AM08C;
+vdec_helpers.c:486:	dev_dbg(sess->core->dev, "Res. changed (%ux%u), DPB size %u\n",
+vdec_helpers.c:488:	v4l2_event_queue_fh(&sess->fh, &ev);
+vdec_helpers.c:494:	dev_info(sess->core->dev, "Aborting decoding session!\n");
+vdec_helpers.c:495:	vb2_queue_error(&sess->m2m_ctx->cap_q_ctx.q);
+vdec_helpers.c:496:	vb2_queue_error(&sess->m2m_ctx->out_q_ctx.q);
+codec_mpeg12.c:65:	struct amvdec_core *core = sess->core;
+codec_mpeg12.c:98:	amvdec_write_dos(core, MREG_CMD, (sess->width << 16) | sess->height);
+codec_mpeg12.c:103:	sess->keyframe_found = 1;
+codec_mpeg12.c:104:	sess->priv = mpeg12;
+codec_mpeg12.c:119:	struct codec_mpeg12 *mpeg12 = sess->priv;
+codec_mpeg12.c:120:	struct amvdec_core *core = sess->core;
+codec_mpeg12.c:132:	struct amvdec_core *core = sess->core;
+codec_mpeg12.c:147:		sess->pixelaspect.numerator = 1;
+codec_mpeg12.c:148:		sess->pixelaspect.denominator = 1;
+codec_mpeg12.c:155:	struct amvdec_core *core = sess->core;
+codec_h264.c:168:	struct amvdec_core *core = sess->core;
+codec_h264.c:169:	struct codec_h264 *h264 = sess->priv;
+codec_h264.c:204:	struct codec_h264 *h264 = sess->priv;
+codec_h264.c:205:	struct amvdec_core *core = sess->core;
+codec_h264.c:230:	struct amvdec_core *core = sess->core;
+codec_h264.c:247:	sess->priv = h264;
+codec_h264.c:262:	struct amvdec_core *core = sess->core;
+codec_h264.c:272:		sess->pixelaspect.numerator = ar_info & 0xffff;
+codec_h264.c:273:		sess->pixelaspect.denominator = (ar_info >> 16) & 0xffff;
+codec_h264.c:280:	sess->pixelaspect = par_table[ar_idc];
+codec_h264.c:285:	struct amvdec_core *core = sess->core;
+codec_h264.c:286:	struct codec_h264 *h264 = sess->priv;
+codec_h264.c:293:		h264->max_refs, sess->num_dst_bufs);
+codec_h264.c:314:					     (sess->num_dst_bufs << 16) |
+codec_h264.c:323:	struct amvdec_core *core = sess->core;
+codec_h264.c:324:	struct codec_h264 *h264 = sess->priv;
+codec_h264.c:329:	sess->keyframe_found = 1;
+codec_h264.c:375:	struct amvdec_core *core = sess->core;
+codec_h264.c:417:	struct amvdec_core *core = sess->core;
+codec_h264.c:466:	struct amvdec_core *core = sess->core;
+vdec_1.c:29:	struct amvdec_core *core = sess->core;
+vdec_1.c:31:	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+vdec_1.c:88:	struct amvdec_core *core = sess->core;
+vdec_1.c:94:	amvdec_write_dos(core, VLD_MEM_VIFIFO_START_PTR, sess->vififo_paddr);
+vdec_1.c:95:	amvdec_write_dos(core, VLD_MEM_VIFIFO_CURR_PTR, sess->vififo_paddr);
+vdec_1.c:97:			 sess->vififo_paddr + sess->vififo_size - 8);
+vdec_1.c:103:	amvdec_write_dos(core, VLD_MEM_VIFIFO_WP, sess->vififo_paddr);
+vdec_1.c:117:	struct amvdec_core *core = sess->core;
+vdec_1.c:127:	struct amvdec_core *core = sess->core;
+vdec_1.c:134:	struct amvdec_core *core = sess->core;
+vdec_1.c:135:	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+vdec_1.c:163:	if (sess->priv)
+vdec_1.c:172:	struct amvdec_core *core = sess->core;
+vdec_1.c:173:	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+vdec_1.c:212:	ret = vdec_1_load_firmware(sess, sess->fmt_out->firmware_path);
+vdec_1.c:225:	if (sess->pixfmt_cap == V4L2_PIX_FMT_NV12M)
+vdec.c:42:	return get_output_size(sess->width, sess->height);
+vdec.c:48:	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+vdec.c:56:	struct amvdec_core *core = sess->core;
+vdec.c:57:	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+vdec.c:61:		mutex_lock(&sess->bufs_recycle_lock);
+vdec.c:62:		list_for_each_entry_safe(tmp, n, &sess->bufs_recycle, list) {
+vdec.c:70:		mutex_unlock(&sess->bufs_recycle_lock);
+vdec.c:81:	struct amvdec_ops *vdec_ops = sess->fmt_out->vdec_ops;
+vdec.c:83:	ret = clk_prepare_enable(sess->core->dos_parser_clk);
+vdec.c:87:	ret = clk_prepare_enable(sess->core->dos_clk);
+vdec.c:100:	clk_disable_unprepare(sess->core->dos_clk);
+vdec.c:102:	clk_disable_unprepare(sess->core->dos_parser_clk);
+vdec.c:110:	while (time_is_after_jiffies64(sess->last_irq_jiffies +
+vdec.c:117:	struct amvdec_ops *vdec_ops = sess->fmt_out->vdec_ops;
+vdec.c:118:	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+vdec.c:120:	sess->should_stop = 1;
+vdec.c:126:	clk_disable_unprepare(sess->core->dos_clk);
+vdec.c:127:	clk_disable_unprepare(sess->core->dos_parser_clk);
+vdec.c:138:	mutex_lock(&sess->bufs_recycle_lock);
+vdec.c:139:	list_add_tail(&new_buf->list, &sess->bufs_recycle);
+vdec.c:140:	mutex_unlock(&sess->bufs_recycle_lock);
+vdec.c:147:	schedule_work(&sess->esparser_queue_work);
+vdec.c:154:	v4l2_m2m_job_finish(sess->m2m_dev, sess->m2m_ctx);
+vdec.c:167:	const struct amvdec_format *fmt_out = sess->fmt_out;
+vdec.c:169:	u32 min_buf_capture = v4l2_ctrl_g_ctrl(sess->ctrl_min_buf_capture);
+vdec.c:183:	sess->num_dst_bufs = q->num_buffers + *num_buffers;
+vdec.c:184:	q->min_buffers_needed = max(fmt_out->min_buffers, sess->num_dst_bufs);
+vdec.c:193:	u32 am08c_size = amvdec_amfbc_size(sess->width, sess->height, 0);
+vdec.c:194:	u32 am10c_size = amvdec_amfbc_size(sess->width, sess->height, 1);
+vdec.c:200:			    sizes[0] < sess->src_buffer_size)
+vdec.c:204:			switch (sess->pixfmt_cap) {
+vdec.c:239:		sizes[0] = sess->src_buffer_size;
+vdec.c:243:		switch (sess->pixfmt_cap) {
+vdec.c:273:	sess->changed_format = 1;
+vdec.c:281:	struct v4l2_m2m_ctx *m2m_ctx = sess->m2m_ctx;
+vdec.c:285:	if (!sess->streamon_out)
+vdec.c:288:	if (sess->streamon_cap &&
+vdec.c:293:	schedule_work(&sess->esparser_queue_work);
+vdec.c:299:	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+vdec.c:300:	struct amvdec_core *core = sess->core;
+vdec.c:310:		sess->streamon_out = 1;
+vdec.c:312:		sess->streamon_cap = 1;
+vdec.c:314:	if (!sess->streamon_out)
+vdec.c:317:	if (sess->status == STATUS_NEEDS_RESUME &&
+vdec.c:319:	    sess->changed_format) {
+vdec.c:321:		sess->status = STATUS_RUNNING;
+vdec.c:325:	if (sess->status == STATUS_RUNNING ||
+vdec.c:326:	    sess->status == STATUS_NEEDS_RESUME ||
+vdec.c:327:	    sess->status == STATUS_INIT)
+vdec.c:330:	sess->vififo_size = SIZE_VIFIFO;
+vdec.c:331:	sess->vififo_vaddr =
+vdec.c:332:		dma_alloc_coherent(sess->core->dev, sess->vififo_size,
+vdec.c:333:				   &sess->vififo_paddr, GFP_KERNEL);
+vdec.c:334:	if (!sess->vififo_vaddr) {
+vdec.c:335:		dev_err(sess->core->dev, "Failed to request VIFIFO buffer\n");
+vdec.c:340:	sess->should_stop = 0;
+vdec.c:341:	sess->keyframe_found = 0;
+vdec.c:342:	sess->last_offset = 0;
+vdec.c:343:	sess->wrap_count = 0;
+vdec.c:344:	sess->pixelaspect.numerator = 1;
+vdec.c:345:	sess->pixelaspect.denominator = 1;
+vdec.c:346:	atomic_set(&sess->esparser_queued_bufs, 0);
+vdec.c:347:	v4l2_ctrl_s_ctrl(sess->ctrl_min_buf_capture, 1);
+vdec.c:353:	sess->sequence_cap = 0;
+vdec.c:354:	sess->sequence_out = 0;
+vdec.c:356:		sess->recycle_thread = kthread_run(vdec_recycle_thread, sess,
+vdec.c:359:	sess->status = STATUS_INIT;
+vdec.c:361:	schedule_work(&sess->esparser_queue_work);
+vdec.c:365:	dma_free_coherent(sess->core->dev, sess->vififo_size,
+vdec.c:366:			  sess->vififo_vaddr, sess->vififo_paddr);
+vdec.c:368:	while ((buf = v4l2_m2m_src_buf_remove(sess->m2m_ctx)))
+vdec.c:370:	while ((buf = v4l2_m2m_dst_buf_remove(sess->m2m_ctx)))
+vdec.c:374:		sess->streamon_out = 0;
+vdec.c:376:		sess->streamon_cap = 0;
+vdec.c:385:	for (i = 0; i < sess->canvas_num; ++i)
+vdec.c:386:		meson_canvas_free(sess->core->canvas, sess->canvas_alloc[i]);
+vdec.c:388:	sess->canvas_num = 0;
+vdec.c:395:	list_for_each_entry_safe(tmp, n, &sess->timestamps, list) {
+vdec.c:405:	list_for_each_entry_safe(tmp, n, &sess->bufs_recycle, list) {
+vdec.c:414:	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+vdec.c:415:	struct amvdec_core *core = sess->core;
+vdec.c:418:	if (sess->status == STATUS_RUNNING ||
+vdec.c:419:	    sess->status == STATUS_INIT ||
+vdec.c:420:	    (sess->status == STATUS_NEEDS_RESUME &&
+vdec.c:421:	     (!sess->streamon_out || !sess->streamon_cap))) {
+vdec.c:423:			kthread_stop(sess->recycle_thread);
+vdec.c:427:		dma_free_coherent(sess->core->dev, sess->vififo_size,
+vdec.c:428:				  sess->vififo_vaddr, sess->vififo_paddr);
+vdec.c:431:		kfree(sess->priv);
+vdec.c:432:		sess->priv = NULL;
+vdec.c:434:		sess->status = STATUS_STOPPED;
+vdec.c:438:		while ((buf = v4l2_m2m_src_buf_remove(sess->m2m_ctx)))
+vdec.c:441:		sess->streamon_out = 0;
+vdec.c:444:		if (sess->status >= STATUS_RUNNING && codec_ops->drain)
+vdec.c:447:		while ((buf = v4l2_m2m_dst_buf_remove(sess->m2m_ctx)))
+vdec.c:450:		sess->streamon_cap = 0;
+vdec.c:513:	const struct amvdec_format *fmts = sess->core->platform->formats;
+vdec.c:529:		fmt_out = sess->fmt_out;
+vdec.c:540:		pfmt[0].sizeimage = sess->src_buffer_size;
+vdec.c:544:		fmt_out = sess->fmt_out;
+vdec.c:580:	vdec_try_fmt_common(sess, sess->core->platform->num_formats, f);
+vdec.c:592:		pixmp->pixelformat = sess->pixfmt_cap;
+vdec.c:594:		pixmp->pixelformat = sess->fmt_out->pixfmt;
+vdec.c:597:		pixmp->width = sess->width;
+vdec.c:598:		pixmp->height = sess->height;
+vdec.c:599:		pixmp->colorspace = sess->colorspace;
+vdec.c:600:		pixmp->ycbcr_enc = sess->ycbcr_enc;
+vdec.c:601:		pixmp->quantization = sess->quantization;
+vdec.c:602:		pixmp->xfer_func = sess->xfer_func;
+vdec.c:604:		pixmp->width = sess->width;
+vdec.c:605:		pixmp->height = sess->height;
+vdec.c:608:	vdec_try_fmt_common(sess, sess->core->platform->num_formats, f);
+vdec.c:618:	u32 num_formats = sess->core->platform->num_formats;
+vdec.c:632:		pixfmt_cap = sess->pixfmt_cap;
+vdec.c:635:		pixfmt_out = sess->fmt_out->pixfmt;
+vdec.c:647:		sess->width = format.fmt.pix_mp.width;
+vdec.c:648:		sess->height = format.fmt.pix_mp.height;
+vdec.c:649:		sess->colorspace = pixmp->colorspace;
+vdec.c:650:		sess->ycbcr_enc = pixmp->ycbcr_enc;
+vdec.c:651:		sess->quantization = pixmp->quantization;
+vdec.c:652:		sess->xfer_func = pixmp->xfer_func;
+vdec.c:653:		sess->src_buffer_size = pixmp->plane_fmt[0].sizeimage;
+vdec.c:664:	sess->width = format.fmt.pix_mp.width;
+vdec.c:665:	sess->height = format.fmt.pix_mp.height;
+vdec.c:668:		sess->fmt_out = fmt_out;
+vdec.c:670:		sess->pixfmt_cap = format.fmt.pix_mp.pixelformat;
+vdec.c:679:	const struct vdec_platform *platform = sess->core->platform;
+vdec.c:692:		fmt_out = sess->fmt_out;
+vdec.c:709:	const struct amvdec_format *formats = sess->core->platform->formats;
+vdec.c:711:	u32 num_formats = sess->core->platform->num_formats;
+vdec.c:734:	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+vdec.c:735:	struct device *dev = sess->core->dev;
+vdec.c:742:	if (!(sess->streamon_out & sess->streamon_cap))
+vdec.c:746:		v4l2_m2m_clear_state(sess->m2m_ctx);
+vdec.c:747:		sess->should_stop = 0;
+vdec.c:757:	sess->should_stop = 1;
+vdec.c:759:	v4l2_m2m_mark_stopped(sess->m2m_ctx);
+vdec.c:768:		esparser_queue_eos(sess->core, data, len);
+vdec.c:798:	*f = sess->pixelaspect;
+vdec.c:843:	src_vq->dev = sess->core->dev;
+vdec.c:844:	src_vq->lock = &sess->lock;
+vdec.c:857:	dst_vq->dev = sess->core->dev;
+vdec.c:858:	dst_vq->lock = &sess->lock;
+vdec.c:870:	struct v4l2_ctrl_handler *ctrl_handler = &sess->ctrl_handler;
+vdec.c:877:	sess->ctrl_min_buf_capture =
+vdec.c:903:	sess->core = core;
+vdec.c:905:	sess->m2m_dev = v4l2_m2m_init(&vdec_m2m_ops);
+vdec.c:906:	if (IS_ERR(sess->m2m_dev)) {
+vdec.c:908:		ret = PTR_ERR(sess->m2m_dev);
+vdec.c:912:	sess->m2m_ctx = v4l2_m2m_ctx_init(sess->m2m_dev, sess, m2m_queue_init);
+vdec.c:913:	if (IS_ERR(sess->m2m_ctx)) {
+vdec.c:915:		ret = PTR_ERR(sess->m2m_ctx);
+vdec.c:923:	sess->pixfmt_cap = formats[0].pixfmts_cap[0];
+vdec.c:924:	sess->fmt_out = &formats[0];
+vdec.c:925:	sess->width = 1280;
+vdec.c:926:	sess->height = 720;
+vdec.c:927:	sess->pixelaspect.numerator = 1;
+vdec.c:928:	sess->pixelaspect.denominator = 1;
+vdec.c:929:	sess->src_buffer_size = SZ_1M;
+vdec.c:931:	INIT_LIST_HEAD(&sess->timestamps);
+vdec.c:932:	INIT_LIST_HEAD(&sess->bufs_recycle);
+vdec.c:933:	INIT_WORK(&sess->esparser_queue_work, esparser_queue_all_src);
+vdec.c:934:	mutex_init(&sess->lock);
+vdec.c:935:	mutex_init(&sess->bufs_recycle_lock);
+vdec.c:936:	spin_lock_init(&sess->ts_spinlock);
+vdec.c:938:	v4l2_fh_init(&sess->fh, core->vdev_dec);
+vdec.c:939:	sess->fh.ctrl_handler = &sess->ctrl_handler;
+vdec.c:940:	v4l2_fh_add(&sess->fh);
+vdec.c:941:	sess->fh.m2m_ctx = sess->m2m_ctx;
+vdec.c:942:	file->private_data = &sess->fh;
+vdec.c:947:	v4l2_m2m_release(sess->m2m_dev);
+vdec.c:958:	v4l2_m2m_ctx_release(sess->m2m_ctx);
+vdec.c:959:	v4l2_m2m_release(sess->m2m_dev);
+vdec.c:960:	v4l2_fh_del(&sess->fh);
+vdec.c:961:	v4l2_fh_exit(&sess->fh);
+vdec.c:963:	mutex_destroy(&sess->lock);
+vdec.c:964:	mutex_destroy(&sess->bufs_recycle_lock);
+vdec.c:985:	sess->last_irq_jiffies = get_jiffies_64();
+vdec.c:987:	return sess->fmt_out->codec_ops->isr(sess);
+vdec.c:995:	return sess->fmt_out->codec_ops->threaded_isr(sess);
+esparser.c:239:	struct amvdec_ops *vdec_ops = sess->fmt_out->vdec_ops;
+esparser.c:240:	struct amvdec_core *core = sess->core;
+esparser.c:246:	if (vififo_usage > sess->vififo_size) {
+esparser.c:247:		dev_warn(sess->core->dev,
+esparser.c:249:			 vififo_usage, sess->vififo_size);
+esparser.c:253:	return sess->vififo_size - vififo_usage;
+esparser.c:278:	struct amvdec_core *core = sess->core;
+esparser.c:280:		     sess->vififo_paddr;
+esparser.c:282:	if (offset < sess->last_offset)
+esparser.c:283:		sess->wrap_count++;
+esparser.c:285:	sess->last_offset = offset;
+esparser.c:286:	offset += (sess->wrap_count * sess->vififo_size);
+esparser.c:296:	struct amvdec_core *core = sess->core;
+esparser.c:297:	struct amvdec_codec_ops *codec_ops = sess->fmt_out->codec_ops;
+esparser.c:312:	if (sess->fmt_out->pixfmt == V4L2_PIX_FMT_VP9) {
+esparser.c:316:		num_dst_bufs += v4l2_m2m_num_dst_bufs_ready(sess->m2m_ctx);
+esparser.c:317:		if (sess->fmt_out->pixfmt == V4L2_PIX_FMT_VP9)
+esparser.c:321:		    atomic_read(&sess->esparser_queued_bufs) >= num_dst_bufs)
+esparser.c:327:	v4l2_m2m_src_buf_remove_by_buf(sess->m2m_ctx, vbuf);
+esparser.c:337:	vbuf->sequence = sess->sequence_out++;
+esparser.c:339:	if (sess->fmt_out->pixfmt == V4L2_PIX_FMT_VP9) {
+esparser.c:363:	atomic_inc(&sess->esparser_queued_bufs);
+esparser.c:375:	mutex_lock(&sess->lock);
+esparser.c:376:	v4l2_m2m_for_each_src_buf_safe(sess->m2m_ctx, buf, n) {
+esparser.c:377:		if (sess->should_stop)
+esparser.c:383:	mutex_unlock(&sess->lock);
+esparser.c:388:	struct amvdec_core *core = sess->core;
+esparser.c:389:	struct amvdec_ops *vdec_ops = sess->fmt_out->vdec_ops;
+esparser.c:413:	amvdec_write_parser(core, PARSER_VIDEO_START_PTR, sess->vififo_paddr);
+esparser.c:415:			    sess->vififo_paddr + sess->vififo_size - 8);
