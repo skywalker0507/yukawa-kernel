@@ -923,7 +923,8 @@ static void codec_vp9_set_sao(struct amvdec_session *sess,
 		val &= ~0x3;
 		if (!codec_hevc_use_fbc(sess->pixfmt_cap, vp9->is_10bit))
 			val |= BIT(0); /* disable cm compression */
-		/* TOFIX: Handle Amlogic Framebuffer compression */
+		else if (amvdec_is_dst_fbc(sess))
+			val |= BIT(1); /* Disable double write */
 	}
 
 	amvdec_write_dos(core, HEVC_SAO_CTRL1, val);
@@ -1133,8 +1134,9 @@ static void codec_vp9_set_mc(struct amvdec_session *sess,
 		    vp9->frame_refs[i]->height != vp9->height)
 			scale = 1;
 
-		sz = amvdec_am21c_body_size(vp9->frame_refs[i]->width,
-					    vp9->frame_refs[i]->height);
+		sz = amvdec_amfbc_body_size(vp9->frame_refs[i]->width,
+					    vp9->frame_refs[i]->height,
+					    vp9->is_10bit);
 
 		amvdec_write_dos(core, VP9D_MPP_REFINFO_DATA,
 				 vp9->frame_refs[i]->width);
@@ -1250,7 +1252,8 @@ static void codec_vp9_process_frame(struct amvdec_session *sess)
 	if (codec_hevc_use_mmu(core->platform->revision, sess->pixfmt_cap,
 			       vp9->is_10bit))
 		codec_hevc_fill_mmu_map(sess, &vp9->common,
-					&vp9->cur_frame->vbuf->vb2_buf);
+					&vp9->cur_frame->vbuf->vb2_buf,
+					vp9->is_10bit);
 
 	intra_only = param->p.show_frame ? 0 : param->p.intra_only;
 
@@ -2098,7 +2101,8 @@ static irqreturn_t codec_vp9_threaded_isr(struct amvdec_session *sess)
 
 	codec_vp9_fetch_rpm(sess);
 	if (codec_vp9_process_rpm(vp9)) {
-		amvdec_src_change(sess, vp9->width, vp9->height, 16);
+		amvdec_src_change(sess, vp9->width, vp9->height, 16,
+				  vp9->is_10bit ? 10 : 8);
 
 		/* No frame is actually processed */
 		vp9->cur_frame = NULL;

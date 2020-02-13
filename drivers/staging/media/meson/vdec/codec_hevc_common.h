@@ -41,14 +41,15 @@ struct codec_hevc_common {
 /* Returns 1 if we must use framebuffer compression */
 static inline int codec_hevc_use_fbc(u32 pixfmt, int is_10bit)
 {
-	/* TOFIX: Handle Amlogic Compressed buffer for 8bit also */
-	return is_10bit;
+	return pixfmt == V4L2_PIX_FMT_AM08C ||
+	       pixfmt == V4L2_PIX_FMT_AM10C ||
+	       is_10bit;
 }
 
 /* Returns 1 if we are decoding 10-bit but outputting 8-bit NV12 */
 static inline int codec_hevc_use_downsample(u32 pixfmt, int is_10bit)
 {
-	return is_10bit;
+	return pixfmt == V4L2_PIX_FMT_NV12M && is_10bit;
 }
 
 /* Returns 1 if we are decoding using the IOMMU */
@@ -72,6 +73,7 @@ int codec_hevc_setup_buffers(struct amvdec_session *sess,
 
 void codec_hevc_fill_mmu_map(struct amvdec_session *sess,
 			     struct codec_hevc_common *comm,
-			     struct vb2_buffer *vb);
+			     struct vb2_buffer *vb,
+			     u32 is_10bit);
 
 #endif
