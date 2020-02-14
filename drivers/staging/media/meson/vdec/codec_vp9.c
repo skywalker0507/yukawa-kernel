@@ -888,7 +888,7 @@ static void codec_vp9_set_sao(struct amvdec_session *sess,
 	if (codec_hevc_use_mmu(core->platform->revision, sess->pixfmt_cap,
 			       vp9->is_10bit)) {
 		amvdec_write_dos(core, HEVC_CM_HEADER_START_ADDR,
-				 vp9->common.mmu_header_paddr[vb->index]);
+				 vb2_dma_contig_plane_dma_addr(vb, 0));
 		/* use HEVC_CM_HEADER_START_ADDR */
 		amvdec_write_dos_bits(core, HEVC_SAO_CTRL5, BIT(10));
 	}
