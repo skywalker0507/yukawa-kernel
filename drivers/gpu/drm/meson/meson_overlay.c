@@ -372,7 +372,7 @@ static void meson_overlay_setup_scaler_params(struct meson_drm *priv,
 
 	if (hd_start_lines > 0 || (hd_end_lines < w_in)) {
 		afbc_left = 0;
-		afbc_right = round_up(w_in + 1, 32);
+		afbc_right = round_up(w_in, 32);
 	} else {
 		afbc_left = round_down(hd_start_lines, 32);
 		afbc_right = round_up(hd_end_lines + 1, 32);
