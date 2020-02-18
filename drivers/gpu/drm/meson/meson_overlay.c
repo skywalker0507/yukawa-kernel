@@ -479,13 +479,19 @@ static void meson_overlay_atomic_update(struct drm_plane *plane,
 
 	spin_lock_irqsave(&priv->drm->event_lock, flags);
 
-	if (fb->modifier == DRM_FORMAT_MOD_AMLOGIC_FBC) {
+	if ((fb->modifier & DRM_FORMAT_MOD_AMLOGIC_FBC(0)) ==
+			    DRM_FORMAT_MOD_AMLOGIC_FBC(0)) {
 		priv->viu.vd1_afbc = true;
 
-		priv->viu.vd1_afbc_mode = AFBC_SCATTER_MODE |
-					  AFBC_MIF_URGENT(3) |
+		priv->viu.vd1_afbc_mode = AFBC_MIF_URGENT(3) |
 					  AFBC_HOLD_LINE_NUM(8) |
 					  AFBC_BURST_LEN(2);
+
+		if (fb->modifier & DRM_FORMAT_MOD_AMLOGIC_FBC_SCATTER)
+			priv->viu.vd1_afbc_mode |= AFBC_SCATTER_MODE;
+
+		if (fb->modifier & DRM_FORMAT_MOD_AMLOGIC_FBC_MEM_SAVING)
+			priv->viu.vd1_afbc_mode |= AFBC_BLK_MEM_MODE;
 
 		priv->viu.vd1_afbc_en = 0x1600 | AFBC_DEC_ENABLE;
 
@@ -512,7 +518,6 @@ static void meson_overlay_atomic_update(struct drm_plane *plane,
 					AFBC_DEF_COLOR_V(512);
 			break;
 		case DRM_FORMAT_YUV420_8BIT:
-			priv->viu.vd1_afbc_mode |= AFBC_BLK_MEM_MODE;
 			priv->viu.vd1_afbc_dec_def_color |=
 					AFBC_DEF_COLOR_U(128) |
 					AFBC_DEF_COLOR_V(128);
@@ -672,6 +677,35 @@ static void meson_overlay_atomic_update(struct drm_plane *plane,
 			 priv->viu.vd1_height0);
 	}
 
+	if (priv->viu.vd1_afbc) {
+		if (priv->viu.vd1_afbc_mode & AFBC_SCATTER_MODE) {
+			/*
+			 * In Scatter mode, the header contains the physical
+			 * body content layout, thus the body content
+			 * size isn't needed.
+			 */
+			priv->viu.vd1_afbc_head_addr = priv->viu.vd1_addr0 >> 4;
+			priv->viu.vd1_afbc_body_addr = 0;
+		} else {
+			/* Default mode is 4k per superblock */
+			unsigned long block_size = 4096;
+			unsigned long body_size;
+
+			/* 8bit mem saving mode is 3072bytes per superblock */
+			if (priv->viu.vd1_afbc_mode & AFBC_BLK_MEM_MODE)
+				block_size = 3072;
+
+			body_size = (ALIGN(priv->viu.vd1_stride0, 64) / 64) *
+				    (ALIGN(priv->viu.vd1_height0, 32) / 32) *
+				    block_size;
+
+			priv->viu.vd1_afbc_body_addr = priv->viu.vd1_addr0 >> 4;
+			/* Header is after body content */
+			priv->viu.vd1_afbc_head_addr = (priv->viu.vd1_addr0 +
+							body_size) >> 4;
+		}
+	}
+
 	priv->viu.vd1_enabled = true;
 
 	spin_unlock_irqrestore(&priv->drm->event_lock, flags);
@@ -716,7 +750,8 @@ static bool meson_overlay_format_mod_supported(struct drm_plane *plane,
 	    format != DRM_FORMAT_YUV420_10BIT)
 		return true;
 
-	if (modifier == DRM_FORMAT_MOD_AMLOGIC_FBC &&
+	if ((modifier & DRM_FORMAT_MOD_AMLOGIC_FBC(0)) ==
+			DRM_FORMAT_MOD_AMLOGIC_FBC(0) &&
 	    (format == DRM_FORMAT_YUV420_8BIT ||
 	     format == DRM_FORMAT_YUV420_10BIT))
 		return true;
@@ -748,7 +783,11 @@ static const uint32_t supported_drm_formats[] = {
 };
 
 static const uint64_t format_modifiers[] = {
-	DRM_FORMAT_MOD_AMLOGIC_FBC,
+	DRM_FORMAT_MOD_AMLOGIC_FBC(DRM_FORMAT_MOD_AMLOGIC_FBC_SCATTER |
+				   DRM_FORMAT_MOD_AMLOGIC_FBC_MEM_SAVING),
+	DRM_FORMAT_MOD_AMLOGIC_FBC(DRM_FORMAT_MOD_AMLOGIC_FBC_SCATTER),
+	DRM_FORMAT_MOD_AMLOGIC_FBC(DRM_FORMAT_MOD_AMLOGIC_FBC_MEM_SAVING),
+	DRM_FORMAT_MOD_AMLOGIC_FBC_DEFAULT,
 	DRM_FORMAT_MOD_LINEAR,
 	DRM_FORMAT_MOD_INVALID,
 };
