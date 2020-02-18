@@ -624,9 +624,6 @@ extern "C" {
  * - a body content organized in 64x32 superblocks with 4096 bytes per
  *   superblock in default mode.
  * - a 32 bytes per 128x64 header block
- *
- * Two optional features are available with may not supported/used on every
- * SoCs and Compressed Framebuffer producers.
  */
 #define DRM_FORMAT_MOD_AMLOGIC_FBC_DEFAULT fourcc_mod_code(AMLOGIC, 0)
 
