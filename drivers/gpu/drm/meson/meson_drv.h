@@ -108,6 +108,8 @@ struct meson_drm {
 		uint32_t vd1_height2;
 		uint32_t vd1_afbc_mode;
 		uint32_t vd1_afbc_en;
+		uint32_t vd1_afbc_head_addr;
+		uint32_t vd1_afbc_body_addr;
 		uint32_t vd1_afbc_conv_ctrl;
 		uint32_t vd1_afbc_dec_def_color;
 		uint32_t vd1_afbc_vd_cfmt_ctrl;
