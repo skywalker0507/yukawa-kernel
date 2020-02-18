@@ -336,10 +336,10 @@ void meson_crtc_irq(struct meson_drm *priv)
 	if (priv->viu.vd1_enabled && priv->viu.vd1_commit) {
 
 		if (priv->viu.vd1_afbc) {
-			writel_relaxed(priv->viu.vd1_addr0 >> 4,
+			writel_relaxed(priv->viu.vd1_afbc_head_addr,
 				       priv->io_base +
 				       _REG(AFBC_HEAD_BADDR));
-			writel_relaxed(0,
+			writel_relaxed(priv->viu.vd1_afbc_body_addr,
 				       priv->io_base +
 				       _REG(AFBC_BODY_BADDR));
 			writel_relaxed(priv->viu.vd1_afbc_en,
