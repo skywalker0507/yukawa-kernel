@@ -61,7 +61,8 @@ static const struct amvdec_format vdec_formats_gxl[] = {
 		.vdec_ops = &vdec_hevc_ops,
 		.codec_ops = &codec_vp9_ops,
 		.firmware_path = "meson/vdec/gxl_vp9.bin",
-		.pixfmts_cap = { V4L2_PIX_FMT_NV12M, 0 },
+		.pixfmts_cap = { V4L2_PIX_FMT_NV12M, V4L2_PIX_FMT_AM08C,
+				 V4L2_PIX_FMT_AM10C, 0 },
 		.flags = V4L2_FMT_FLAG_COMPRESSED |
 			 V4L2_FMT_FLAG_DYN_RESOLUTION,
 	}, {

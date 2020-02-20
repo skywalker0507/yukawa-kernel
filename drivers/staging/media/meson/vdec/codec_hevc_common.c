@@ -16,8 +16,10 @@
 void codec_hevc_setup_decode_head(struct amvdec_session *sess, int is_10bit)
 {
 	struct amvdec_core *core = sess->core;
+	u32 use_mmu = codec_hevc_use_mmu(core->platform->revision,
+					 sess->pixfmt_cap, is_10bit);
 	u32 body_size = amvdec_amfbc_body_size(sess->width, sess->height,
-					       is_10bit);
+					       is_10bit, use_mmu);
 	u32 head_size = amvdec_amfbc_head_size(sess->width, sess->height);
 
 	if (!codec_hevc_use_fbc(sess->pixfmt_cap, is_10bit)) {
@@ -35,7 +37,7 @@ void codec_hevc_setup_decode_head(struct amvdec_session *sess, int is_10bit)
 	if (codec_hevc_use_mmu(core->platform->revision,
 			       sess->pixfmt_cap, is_10bit))
 		amvdec_write_dos(core, HEVCD_MPP_DECOMP_CTL1, BIT(4));
-	else if (codec_hevc_use_fbc(sess->pixfmt_cap, is_10bit) && !is_10bit)
+	else if (!is_10bit)
 		amvdec_write_dos(core, HEVCD_MPP_DECOMP_CTL1, BIT(3));
 	else
 		amvdec_write_dos(core, HEVCD_MPP_DECOMP_CTL1, 0);
@@ -109,7 +111,6 @@ static void codec_hevc_setup_buffers_gxl(struct amvdec_session *sess,
 {
 	struct amvdec_core *core = sess->core;
 	struct v4l2_m2m_buffer *buf;
-	u32 revision = core->platform->revision;
 	u32 pixfmt_cap = sess->pixfmt_cap;
 	int i;
 
@@ -122,9 +123,7 @@ static void codec_hevc_setup_buffers_gxl(struct amvdec_session *sess,
 		dma_addr_t buf_uv_paddr = 0;
 		u32 idx = vb->index;
 
-		if (codec_hevc_use_mmu(revision, pixfmt_cap, is_10bit))
-			buf_y_paddr = vb2_dma_contig_plane_dma_addr(vb, 0);
-		else if (codec_hevc_use_downsample(pixfmt_cap, is_10bit))
+		if (codec_hevc_use_downsample(pixfmt_cap, is_10bit))
 			buf_y_paddr = comm->fbc_buffer_paddr[idx];
 		else
 			buf_y_paddr = vb2_dma_contig_plane_dma_addr(vb, 0);
@@ -149,8 +148,12 @@ void codec_hevc_free_fbc_buffers(struct amvdec_session *sess,
 				 struct codec_hevc_common *comm)
 {
 	struct device *dev = sess->core->dev;
+	u32 use_mmu = codec_hevc_use_mmu(sess->core->platform->revision,
+					 sess->pixfmt_cap,
+					 sess->bitdepth == 10 ? 1 : 0);
 	u32 am21_size = amvdec_amfbc_size(sess->width, sess->height,
-					  sess->bitdepth == 10 ? 1 : 0);
+					  sess->bitdepth == 10 ? 1 : 0,
+					  use_mmu);
 	int i;
 
 	for (i = 0; i < MAX_REF_PIC_NUM; ++i) {
@@ -177,8 +180,12 @@ static int codec_hevc_alloc_fbc_buffers(struct amvdec_session *sess,
 {
 	struct device *dev = sess->core->dev;
 	struct v4l2_m2m_buffer *buf;
+	u32 use_mmu = codec_hevc_use_mmu(sess->core->platform->revision,
+					 sess->pixfmt_cap,
+					 sess->bitdepth == 10 ? 1 : 0);
 	u32 am21_size = amvdec_amfbc_size(sess->width, sess->height,
-					  sess->bitdepth == 10 ? 1 : 0);
+					  sess->bitdepth == 10 ? 1 : 0,
+					  use_mmu);
 
 	v4l2_m2m_for_each_dst_buf(sess->m2m_ctx, buf) {
 		u32 idx = buf->vb.vb2_buf.index;
@@ -215,7 +222,9 @@ int codec_hevc_setup_buffers(struct amvdec_session *sess,
 			return -ENOMEM;
 	}
 
-	if (codec_hevc_use_fbc(sess->pixfmt_cap, is_10bit)) {
+	if (codec_hevc_use_mmu(core->platform->revision,
+			       sess->pixfmt_cap, is_10bit) ||
+	    codec_hevc_use_downsample(sess->pixfmt_cap, is_10bit)) {
 		ret = codec_hevc_alloc_fbc_buffers(sess, comm);
 		if (ret)
 			return ret;
@@ -235,7 +244,10 @@ void codec_hevc_fill_mmu_map(struct amvdec_session *sess,
 			     struct vb2_buffer *vb,
 			     u32 is_10bit)
 {
-	u32 size = amvdec_amfbc_size(sess->width, sess->height, is_10bit);
+	u32 use_mmu = codec_hevc_use_mmu(sess->core->platform->revision,
+					 sess->pixfmt_cap, is_10bit);
+	u32 size = amvdec_amfbc_size(sess->width, sess->height, is_10bit,
+				     use_mmu);
 	u32 nb_pages = size / PAGE_SIZE;
 	u32 *mmu_map = comm->mmu_map_vaddr;
 	u32 first_page;
