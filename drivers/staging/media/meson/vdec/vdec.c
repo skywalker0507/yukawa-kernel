@@ -572,22 +572,24 @@ vdec_try_fmt_common(struct amvdec_session *sess, u32 size,
 			pfmt[2].bytesperline = ALIGN(pixmp->width, 32) / 2;
 			pixmp->num_planes = 3;
 		} else if (pixmp->pixelformat == V4L2_PIX_FMT_AM08C) {
-			if (revision >= VDEC_REVISION_G12A)
+			if (revision >= VDEC_REVISION_G12A) {
 				pfmt[0].sizeimage = MMU_COMPRESS_HEADER_SIZE;
-			else
+			} else {
 				pfmt[0].sizeimage =
 					amvdec_amfbc_size(pixmp->width,
 							  pixmp->height, 0, 0);
-			pfmt[0].bytesperline = pixmp->width;
+				pfmt[0].bytesperline = pixmp->width;
+			}
 			pixmp->num_planes = 1;
 		} else if (pixmp->pixelformat == V4L2_PIX_FMT_AM10C) {
-			if (revision >= VDEC_REVISION_G12A)
+			if (revision >= VDEC_REVISION_G12A) {
 				pfmt[0].sizeimage = MMU_COMPRESS_HEADER_SIZE;
-			else
+			} else {
 				pfmt[0].sizeimage =
 					amvdec_amfbc_size(pixmp->width,
 							  pixmp->height, 1, 0);
-			pfmt[0].bytesperline = pixmp->width;
+				pfmt[0].bytesperline = pixmp->width;
+			}
 			pixmp->num_planes = 1;
 		}
 	}
