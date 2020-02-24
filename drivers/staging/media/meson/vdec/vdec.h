@@ -241,6 +241,7 @@ struct amvdec_session {
 	u8 ycbcr_enc;
 	u8 quantization;
 	u8 xfer_func;
+	u64 modifier;
 
 	struct v4l2_fract pixelaspect;
 
