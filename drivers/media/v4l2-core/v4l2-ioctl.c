@@ -1151,13 +1151,6 @@ int v4l2_ext_format_to_format(const struct v4l2_ext_format *e,
 	switch (e->type) {
 	case V4L2_BUF_TYPE_VIDEO_CAPTURE:
 	case V4L2_BUF_TYPE_VIDEO_OUTPUT:
-		/*
-		 * Make sure no modifier is required before doing the
-		 * conversion.
-		 */
-		if (e->fmt.pix.modifier && strict)
-			return -EINVAL;
-
 		if ((e->fmt.pix.num_planes > VIDEO_MAX_PLANES ||
 		     !e->fmt.pix.num_planes) && strict)
 			return -EINVAL;
@@ -1774,19 +1767,19 @@ static int v4l_g_fmt_ext_pix(const struct v4l2_ioctl_ops *ops,
 			     struct file *file, void *fh,
 			     struct v4l2_format *f)
 {
-	struct v4l2_ext_format ef = {
-		.type = f->type,
-	};
+	struct v4l2_ext_format ef = { 0 };
 	int ret;
 
 	switch (f->type) {
 	case V4L2_BUF_TYPE_VIDEO_CAPTURE:
 	case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
+		ef.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		ret = ops->vidioc_g_ext_fmt_vid_cap(file, fh, &ef.fmt.pix);
 		break;
 
 	case V4L2_BUF_TYPE_VIDEO_OUTPUT:
 	case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
+		ef.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
 		ret = ops->vidioc_g_ext_fmt_vid_out(file, fh, &ef.fmt.pix);
 		break;
 
