@@ -4895,15 +4895,8 @@ drm_hdmi_extract_vsdbs_info(struct drm_connector *connector,
 			db = &cea[i];
 
 			if (cea_db_tag(db) == VENDOR_BLOCK) {
-				/* HDMI Vendor-Specific Data Block */
-				if (cea_db_is_hdmi_vsdb(db)) {
-					drm_parse_hdmi_vsdb_video(
-						connector, db);
-					drm_parse_hdmi_vsdb_audio(
-						connector, db);
-				}
 				/* HDMI Forum Vendor-Specific Data Block */
-				else if (cea_db_is_hdmi_forum_vsdb(db))
+				if (cea_db_is_hdmi_forum_vsdb(db))
 					parse_hdmi_hf_vsdb(connector, db);
 			}
 		}
