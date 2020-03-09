@@ -11,6 +11,7 @@
 #include "vdec_hevc.h"
 #include "codec_mpeg12.h"
 #include "codec_h264.h"
+#include "codec_hevc.h"
 #include "codec_vp9.h"
 
 static const struct amvdec_format vdec_formats_gxbb[] = {
@@ -66,6 +67,18 @@ static const struct amvdec_format vdec_formats_gxl[] = {
 		.flags = V4L2_FMT_FLAG_COMPRESSED |
 			 V4L2_FMT_FLAG_DYN_RESOLUTION,
 	}, {
+		.pixfmt = V4L2_PIX_FMT_HEVC,
+		.min_buffers = 4,
+		.max_buffers = 24,
+		.max_width = 3840,
+		.max_height = 2160,
+		.vdec_ops = &vdec_hevc_ops,
+		.codec_ops = &codec_hevc_ops,
+		.firmware_path = "meson/vdec/gxl_hevc.bin",
+		.pixfmts_cap = { V4L2_PIX_FMT_NV12M, 0 },
+		.flags = V4L2_FMT_FLAG_COMPRESSED |
+			 V4L2_FMT_FLAG_DYN_RESOLUTION,
+	}, {
 		.pixfmt = V4L2_PIX_FMT_H264,
 		.min_buffers = 2,
 		.max_buffers = 24,
@@ -116,6 +129,18 @@ static const struct amvdec_format vdec_formats_gxm[] = {
 		.flags = V4L2_FMT_FLAG_COMPRESSED |
 			 V4L2_FMT_FLAG_DYN_RESOLUTION,
 	}, {
+		.pixfmt = V4L2_PIX_FMT_HEVC,
+		.min_buffers = 4,
+		.max_buffers = 24,
+		.max_width = 3840,
+		.max_height = 2160,
+		.vdec_ops = &vdec_hevc_ops,
+		.codec_ops = &codec_hevc_ops,
+		.firmware_path = "meson/vdec/gxl_hevc.bin",
+		.pixfmts_cap = { V4L2_PIX_FMT_NV12M, 0 },
+		.flags = V4L2_FMT_FLAG_COMPRESSED |
+			 V4L2_FMT_FLAG_DYN_RESOLUTION,
+	}, {
 		.pixfmt = V4L2_PIX_FMT_MPEG1,
 		.min_buffers = 8,
 		.max_buffers = 8,
@@ -155,6 +180,18 @@ static const struct amvdec_format vdec_formats_g12a[] = {
 		.flags = V4L2_FMT_FLAG_COMPRESSED |
 			 V4L2_FMT_FLAG_DYN_RESOLUTION,
 	}, {
+		.pixfmt = V4L2_PIX_FMT_HEVC,
+		.min_buffers = 4,
+		.max_buffers = 24,
+		.max_width = 3840,
+		.max_height = 2160,
+		.vdec_ops = &vdec_hevc_ops,
+		.codec_ops = &codec_hevc_ops,
+		.firmware_path = "meson/vdec/g12a_hevc_mmu.bin",
+		.pixfmts_cap = { V4L2_PIX_FMT_NV12M, 0 },
+		.flags = V4L2_FMT_FLAG_COMPRESSED |
+			 V4L2_FMT_FLAG_DYN_RESOLUTION,
+	},{
 		.pixfmt = V4L2_PIX_FMT_H264,
 		.min_buffers = 2,
 		.max_buffers = 24,
@@ -203,6 +240,18 @@ static const struct amvdec_format vdec_formats_sm1[] = {
 		.firmware_path = "meson/vdec/sm1_vp9_mmu.bin",
 		.pixfmts_cap = { V4L2_PIX_FMT_NV12M, V4L2_PIX_FMT_AM08C,
 				 V4L2_PIX_FMT_AM10C, 0 },
+		.flags = V4L2_FMT_FLAG_COMPRESSED |
+			 V4L2_FMT_FLAG_DYN_RESOLUTION,
+	}, {
+		.pixfmt = V4L2_PIX_FMT_HEVC,
+		.min_buffers = 4,
+		.max_buffers = 24,
+		.max_width = 3840,
+		.max_height = 2160,
+		.vdec_ops = &vdec_hevc_ops,
+		.codec_ops = &codec_hevc_ops,
+		.firmware_path = "meson/vdec/sm1_hevc_mmu.bin",
+		.pixfmts_cap = { V4L2_PIX_FMT_NV12M, 0 },
 		.flags = V4L2_FMT_FLAG_COMPRESSED |
 			 V4L2_FMT_FLAG_DYN_RESOLUTION,
 	}, {
