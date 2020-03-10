@@ -474,31 +474,30 @@ void amvdec_src_change(struct amvdec_session *sess, u32 width,
 
 	v4l2_ctrl_s_ctrl(sess->ctrl_min_buf_capture, dpb_size);
 
-	/*
-	 * Check if the capture queue is already configured well for our
-	 * usecase. If so, keep decoding with it and do not send the event
-	 */
-	if (sess->streamon_cap &&
-	    sess->width == width &&
-	    sess->height == height &&
-	    dpb_size <= sess->num_dst_bufs &&
-	    sess->bitdepth == bitdepth) {
-		sess->fmt_out->codec_ops->resume(sess);
-		return;
-	}
-
-	sess->changed_format = 0;
-	sess->width = width;
-	sess->height = height;
-	sess->status = STATUS_NEEDS_RESUME;
-	sess->bitdepth = bitdepth;
-
 	if (sess->pixfmt_cap == V4L2_PIX_FMT_AM08C &&
 	    bitdepth == 10)
 		sess->pixfmt_cap = V4L2_PIX_FMT_AM10C;
 	else if (sess->pixfmt_cap == V4L2_PIX_FMT_AM10C &&
 		 bitdepth == 8)
 		 sess->pixfmt_cap = V4L2_PIX_FMT_AM08C;
+
+	sess->bitdepth = bitdepth;
+	/*
+	 * Check if the capture queue is already configured well for our
+	 * usecase. If so, keep decoding with it.
+	 */
+	if (sess->streamon_cap &&
+	    sess->width == width &&
+	    sess->height == height &&
+	    dpb_size <= sess->num_dst_bufs) {
+		sess->fmt_out->codec_ops->resume(sess);
+	} else {
+		sess->status = STATUS_NEEDS_RESUME;
+		sess->changed_format = 0;
+	}
+
+	sess->width = width;
+	sess->height = height;
 
 	dev_dbg(sess->core->dev, "Res. changed (%ux%u), DPB %u, bitdepth %u\n",
 		width, height, dpb_size, bitdepth);
