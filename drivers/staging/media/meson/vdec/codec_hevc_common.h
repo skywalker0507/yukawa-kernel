@@ -31,6 +31,9 @@ struct codec_hevc_common {
 	void      *fbc_buffer_vaddr[MAX_REF_PIC_NUM];
 	dma_addr_t fbc_buffer_paddr[MAX_REF_PIC_NUM];
 
+	void      *mmu_header_vaddr[MAX_REF_PIC_NUM];
+	dma_addr_t mmu_header_paddr[MAX_REF_PIC_NUM];
+
 	void      *mmu_map_vaddr;
 	dma_addr_t mmu_map_paddr;
 };

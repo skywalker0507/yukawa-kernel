@@ -112,6 +112,7 @@ static void codec_hevc_setup_buffers_gxl(struct amvdec_session *sess,
 	struct amvdec_core *core = sess->core;
 	struct v4l2_m2m_buffer *buf;
 	u32 pixfmt_cap = sess->pixfmt_cap;
+	const u32 revision = core->platform->revision;
 	int i;
 
 	amvdec_write_dos(core, HEVCD_MPP_ANC2AXI_TBL_CONF_ADDR,
@@ -123,10 +124,14 @@ static void codec_hevc_setup_buffers_gxl(struct amvdec_session *sess,
 		dma_addr_t buf_uv_paddr = 0;
 		u32 idx = vb->index;
 
-		if (codec_hevc_use_downsample(pixfmt_cap, is_10bit))
-			buf_y_paddr = comm->fbc_buffer_paddr[idx];
-		else
+		if (codec_hevc_use_downsample(pixfmt_cap, is_10bit)) {
+			if (codec_hevc_use_mmu(revision, pixfmt_cap, is_10bit))
+				buf_y_paddr = comm->mmu_header_paddr[idx];
+			else
+				buf_y_paddr = comm->fbc_buffer_paddr[idx];
+		} else {
 			buf_y_paddr = vb2_dma_contig_plane_dma_addr(vb, 0);
+		}
 
 		amvdec_write_dos(core, HEVCD_MPP_ANC2AXI_TBL_DATA,
 				 buf_y_paddr >> 5);
@@ -142,6 +147,46 @@ static void codec_hevc_setup_buffers_gxl(struct amvdec_session *sess,
 	amvdec_write_dos(core, HEVCD_MPP_ANC_CANVAS_ACCCONFIG_ADDR, 1);
 	for (i = 0; i < 32; ++i)
 		amvdec_write_dos(core, HEVCD_MPP_ANC_CANVAS_DATA_ADDR, 0);
+}
+
+void codec_hevc_free_mmu_headers(struct amvdec_session *sess,
+				 struct codec_hevc_common *comm)
+{
+	struct device *dev = sess->core->dev;
+	int i;
+
+	for (i = 0; i < MAX_REF_PIC_NUM; ++i) {
+		if (comm->mmu_header_vaddr[i]) {
+			dma_free_coherent(dev, MMU_COMPRESS_HEADER_SIZE,
+					  comm->mmu_header_vaddr[i],
+					  comm->mmu_header_paddr[i]);
+			comm->mmu_header_vaddr[i] = NULL;
+		}
+	}
+}
+EXPORT_SYMBOL_GPL(codec_hevc_free_mmu_headers);
+
+static int codec_hevc_alloc_mmu_headers(struct amvdec_session *sess,
+					struct codec_hevc_common *comm)
+{
+	struct device *dev = sess->core->dev;
+	struct v4l2_m2m_buffer *buf;
+
+	v4l2_m2m_for_each_dst_buf(sess->m2m_ctx, buf) {
+		u32 idx = buf->vb.vb2_buf.index;
+		dma_addr_t paddr;
+		void *vaddr = dma_alloc_coherent(dev, MMU_COMPRESS_HEADER_SIZE,
+						 &paddr, GFP_KERNEL);
+		if (!vaddr) {
+			codec_hevc_free_mmu_headers(sess, comm);
+			return -ENOMEM;
+		}
+
+		comm->mmu_header_vaddr[idx] = vaddr;
+		comm->mmu_header_paddr[idx] = paddr;
+	}
+
+	return 0;
 }
 
 void codec_hevc_free_fbc_buffers(struct amvdec_session *sess,
@@ -172,6 +217,7 @@ void codec_hevc_free_fbc_buffers(struct amvdec_session *sess,
 		comm->mmu_map_vaddr = NULL;
 	}
 
+	codec_hevc_free_mmu_headers(sess, comm);
 }
 EXPORT_SYMBOL_GPL(codec_hevc_free_fbc_buffers);
 
@@ -180,12 +226,15 @@ static int codec_hevc_alloc_fbc_buffers(struct amvdec_session *sess,
 {
 	struct device *dev = sess->core->dev;
 	struct v4l2_m2m_buffer *buf;
-	u32 use_mmu = codec_hevc_use_mmu(sess->core->platform->revision,
-					 sess->pixfmt_cap,
-					 sess->bitdepth == 10 ? 1 : 0);
+	const u32 revision = sess->core->platform->revision;
+	const u32 is_10bit = sess->bitdepth == 10 ? 1 : 0;
+	u32 use_mmu = codec_hevc_use_mmu(revision, sess->pixfmt_cap,
+					 is_10bit);
 	u32 am21_size = amvdec_amfbc_size(sess->width, sess->height,
-					  sess->bitdepth == 10 ? 1 : 0,
+					  is_10bit,
 					  use_mmu);
+
+	int ret;
 
 	v4l2_m2m_for_each_dst_buf(sess->m2m_ctx, buf) {
 		u32 idx = buf->vb.vb2_buf.index;
@@ -193,13 +242,21 @@ static int codec_hevc_alloc_fbc_buffers(struct amvdec_session *sess,
 		void *vaddr = dma_alloc_coherent(dev, am21_size, &paddr,
 						 GFP_KERNEL);
 		if (!vaddr) {
-			dev_err(dev, "Couldn't allocate FBC buffer %u\n", idx);
 			codec_hevc_free_fbc_buffers(sess, comm);
 			return -ENOMEM;
 		}
 
 		comm->fbc_buffer_vaddr[idx] = vaddr;
 		comm->fbc_buffer_paddr[idx] = paddr;
+	}
+
+	if (codec_hevc_use_mmu(revision, sess->pixfmt_cap, is_10bit) &&
+	    codec_hevc_use_downsample(sess->pixfmt_cap, is_10bit)) {
+		ret = codec_hevc_alloc_mmu_headers(sess, comm);
+		if (ret) {
+			codec_hevc_free_fbc_buffers(sess, comm);
+			return ret;
+		}
 	}
 
 	return 0;
