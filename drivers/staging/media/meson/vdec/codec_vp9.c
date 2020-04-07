@@ -453,12 +453,6 @@ struct codec_vp9 {
 	struct list_head ref_frames_list;
 	u32 frames_num;
 
-	/* In case of downsampling (decoding with FBC but outputting in NV12M),
-	 * we need to allocate additional buffers for FBC.
-	 */
-	void      *fbc_buffer_vaddr[MAX_REF_PIC_NUM];
-	dma_addr_t fbc_buffer_paddr[MAX_REF_PIC_NUM];
-
 	int ref_frame_map[REF_FRAMES];
 	int next_ref_frame_map[REF_FRAMES];
 	struct vp9_frame *frame_refs[REFS_PER_FRAME];
@@ -898,11 +892,8 @@ static void codec_vp9_set_sao(struct amvdec_session *sess,
 		buf_y_paddr =
 		       vb2_dma_contig_plane_dma_addr(vb, 0);
 
-	if (codec_hevc_use_fbc(sess->pixfmt_cap, vp9->is_10bit)) {
-		val = amvdec_read_dos(core, HEVC_SAO_CTRL5) & ~0xff0200;
-		amvdec_write_dos(core, HEVC_SAO_CTRL5, val);
+	if (codec_hevc_use_fbc(sess->pixfmt_cap, vp9->is_10bit))
 		amvdec_write_dos(core, HEVC_CM_BODY_START_ADDR, buf_y_paddr);
-	}
 
 	if (sess->pixfmt_cap == V4L2_PIX_FMT_NV12M) {
 		buf_y_paddr =
@@ -917,8 +908,12 @@ static void codec_vp9_set_sao(struct amvdec_session *sess,
 
 	if (codec_hevc_use_mmu(core->platform->revision, sess->pixfmt_cap,
 			       vp9->is_10bit)) {
-		amvdec_write_dos(core, HEVC_CM_HEADER_START_ADDR,
-				 vp9->common.mmu_header_paddr[vb->index]);
+		dma_addr_t header_adr;
+		if (codec_hevc_use_downsample(sess->pixfmt_cap, vp9->is_10bit))
+			header_adr = vp9->common.mmu_header_paddr[vb->index];
+		else
+			header_adr = vb2_dma_contig_plane_dma_addr(vb, 0);
+		amvdec_write_dos(core, HEVC_CM_HEADER_START_ADDR, header_adr);
 		/* use HEVC_CM_HEADER_START_ADDR */
 		amvdec_write_dos_bits(core, HEVC_SAO_CTRL5, BIT(10));
 	}
@@ -1144,6 +1139,8 @@ static void codec_vp9_set_mc(struct amvdec_session *sess,
 			     struct codec_vp9 *vp9)
 {
 	struct amvdec_core *core = sess->core;
+	u32 use_mmu = codec_hevc_use_mmu(core->platform->revision,
+					 sess->pixfmt_cap, vp9->is_10bit);
 	u32 scale = 0;
 	u32 sz;
 	int i;
@@ -1163,8 +1160,9 @@ static void codec_vp9_set_mc(struct amvdec_session *sess,
 		    vp9->frame_refs[i]->height != vp9->height)
 			scale = 1;
 
-		sz = amvdec_am21c_body_size(vp9->frame_refs[i]->width,
-					    vp9->frame_refs[i]->height);
+		sz = amvdec_amfbc_body_size(vp9->frame_refs[i]->width,
+					    vp9->frame_refs[i]->height,
+					    vp9->is_10bit, use_mmu);
 
 		amvdec_write_dos(core, VP9D_MPP_REFINFO_DATA,
 				 vp9->frame_refs[i]->width);
@@ -1293,7 +1291,8 @@ static void codec_vp9_process_frame(struct amvdec_session *sess)
 	if (codec_hevc_use_mmu(core->platform->revision, sess->pixfmt_cap,
 			       vp9->is_10bit))
 		codec_hevc_fill_mmu_map(sess, &vp9->common,
-					&vp9->cur_frame->vbuf->vb2_buf);
+					&vp9->cur_frame->vbuf->vb2_buf,
+					vp9->is_10bit);
 
 	intra_only = param->p.show_frame ? 0 : param->p.intra_only;
 
@@ -2142,7 +2141,8 @@ static irqreturn_t codec_vp9_threaded_isr(struct amvdec_session *sess)
 
 	codec_vp9_fetch_rpm(sess);
 	if (codec_vp9_process_rpm(vp9)) {
-		amvdec_src_change(sess, vp9->width, vp9->height, 16);
+		amvdec_src_change(sess, vp9->width, vp9->height, 16,
+				  vp9->is_10bit ? 10 : 8);
 
 		/* No frame is actually processed */
 		vp9->cur_frame = NULL;
