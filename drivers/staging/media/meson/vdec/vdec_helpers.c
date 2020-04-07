@@ -85,6 +85,12 @@ u32 amvdec_amfbc_size(u32 width, u32 height, u32 is_10bit, u32 use_mmu)
 }
 EXPORT_SYMBOL_GPL(amvdec_amfbc_size);
 
+u32 amvdec_is_dst_fbc(struct amvdec_session *sess) {
+	return sess->pixfmt_cap == V4L2_PIX_FMT_AM08C ||
+	       sess->pixfmt_cap == V4L2_PIX_FMT_AM10C;
+}
+EXPORT_SYMBOL_GPL(amvdec_is_dst_fbc);
+
 static int canvas_alloc(struct amvdec_session *sess, u8 *canvas_id)
 {
 	int ret;
@@ -451,6 +457,13 @@ void amvdec_src_change(struct amvdec_session *sess, u32 width,
 		.u.src_change.changes = V4L2_EVENT_SRC_CH_RESOLUTION };
 
 	v4l2_ctrl_s_ctrl(sess->ctrl_min_buf_capture, dpb_size);
+
+	if (sess->pixfmt_cap == V4L2_PIX_FMT_AM08C &&
+	    bitdepth == 10)
+		sess->pixfmt_cap = V4L2_PIX_FMT_AM10C;
+	else if (sess->pixfmt_cap == V4L2_PIX_FMT_AM10C &&
+		 bitdepth == 8)
+		 sess->pixfmt_cap = V4L2_PIX_FMT_AM08C;
 
 	sess->bitdepth = bitdepth;
 

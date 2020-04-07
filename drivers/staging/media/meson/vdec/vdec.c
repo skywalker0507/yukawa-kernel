@@ -19,6 +19,7 @@
 #include <media/v4l2-mem2mem.h>
 #include <media/v4l2-dev.h>
 #include <media/videobuf2-dma-contig.h>
+#include <uapi/drm/drm_fourcc.h>
 
 #include "vdec.h"
 #include "esparser.h"
@@ -192,6 +193,7 @@ static int vdec_queue_setup(struct vb2_queue *q, unsigned int *num_buffers,
 {
 	struct amvdec_session *sess = vb2_get_drv_priv(q);
 	u32 output_size = amvdec_get_output_size(sess);
+	u32 revision = sess->core->platform->revision;
 
 	if (*num_planes) {
 		switch (q->type) {
@@ -213,6 +215,12 @@ static int vdec_queue_setup(struct vb2_queue *q, unsigned int *num_buffers,
 				    sizes[0] < output_size ||
 				    sizes[1] < output_size / 4 ||
 				    sizes[2] < output_size / 4)
+					return -EINVAL;
+				break;
+			case V4L2_PIX_FMT_AM08C:
+			case V4L2_PIX_FMT_AM10C:
+				if (*num_planes != 1 ||
+				    sizes[0] < MMU_COMPRESS_HEADER_SIZE)
 					return -EINVAL;
 				break;
 			default:
@@ -243,6 +251,24 @@ static int vdec_queue_setup(struct vb2_queue *q, unsigned int *num_buffers,
 			sizes[1] = output_size / 4;
 			sizes[2] = output_size / 4;
 			*num_planes = 3;
+			break;
+		case V4L2_PIX_FMT_AM08C:
+			if (revision >= VDEC_REVISION_G12A)
+				sizes[0] = MMU_COMPRESS_HEADER_SIZE;
+			else
+				sizes[0] = amvdec_amfbc_size(sess->width,
+							     sess->height,
+							     0, 0);
+			*num_planes = 1;
+			break;
+		case V4L2_PIX_FMT_AM10C:
+			if (revision >= VDEC_REVISION_G12A)
+				sizes[0] = MMU_COMPRESS_HEADER_SIZE;
+			else
+				sizes[0] = amvdec_amfbc_size(sess->width,
+							     sess->height,
+							     1, 0);
+			*num_planes = 1;
 			break;
 		default:
 			return -EINVAL;
@@ -489,170 +515,231 @@ vdec_supports_pixfmt_cap(const struct amvdec_format *fmt_out, u32 pixfmt_cap)
 }
 
 static const struct amvdec_format *
-vdec_try_fmt_common(struct amvdec_session *sess, u32 size,
-		    struct v4l2_format *f)
+vdec_try_fmt_common_cap(struct amvdec_session *sess, u32 size,
+			struct v4l2_ext_pix_format *f)
 {
-	struct v4l2_pix_format_mplane *pixmp = &f->fmt.pix_mp;
-	struct v4l2_plane_pix_format *pfmt = pixmp->plane_fmt;
-	const struct amvdec_format *fmts = sess->core->platform->formats;
-	const struct amvdec_format *fmt_out = NULL;
+	struct v4l2_plane_ext_pix_format *pfmt = f->plane_fmt;
+	const struct amvdec_format *fmt_out = sess->fmt_out;
+	u32 revision = sess->core->platform->revision;
 	u32 output_size = 0;
 
-	memset(pfmt[0].reserved, 0, sizeof(pfmt[0].reserved));
-	memset(pixmp->reserved, 0, sizeof(pixmp->reserved));
+	f->width  = clamp(f->width,  (u32)256, fmt_out->max_width);
+	f->height = clamp(f->height, (u32)144, fmt_out->max_height);
+	output_size = get_output_size(f->width, f->height);
 
-	switch (f->type) {
-	case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
-		fmt_out = find_format(fmts, size, pixmp->pixelformat);
-		if (!fmt_out) {
-			pixmp->pixelformat = V4L2_PIX_FMT_MPEG2;
-			fmt_out = find_format(fmts, size, pixmp->pixelformat);
+	fmt_out = sess->fmt_out;
+	if (!vdec_supports_pixfmt_cap(fmt_out, f->pixelformat))
+		f->pixelformat = fmt_out->pixfmts_cap[0];
+	/* Default modifier, can be overriden */
+	f->modifier = DRM_FORMAT_MOD_LINEAR;
+
+	if (f->pixelformat == V4L2_PIX_FMT_NV12M) {
+		pfmt[0].sizeimage = output_size;
+		pfmt[0].bytesperline = ALIGN(f->width, 32);
+
+		pfmt[1].sizeimage = output_size / 2;
+		pfmt[1].bytesperline = ALIGN(f->width, 32);
+		f->num_planes = 2;
+	} else if (f->pixelformat == V4L2_PIX_FMT_YUV420M) {
+		pfmt[0].sizeimage = output_size;
+		pfmt[0].bytesperline = ALIGN(f->width, 32);
+
+		pfmt[1].sizeimage = output_size / 4;
+		pfmt[1].bytesperline = ALIGN(f->width, 32) / 2;
+
+		pfmt[2].sizeimage = output_size / 2;
+		pfmt[2].bytesperline = ALIGN(f->width, 32) / 2;
+		f->num_planes = 3;
+	} else if (f->pixelformat == V4L2_PIX_FMT_AM08C) {
+		if (revision >= VDEC_REVISION_G12A) {
+			pfmt[0].sizeimage = MMU_COMPRESS_HEADER_SIZE;
+			f->modifier = DRM_FORMAT_MOD_AMLOGIC_FBC(
+				DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_SCATTER |
+				DRM_FORMAT_MOD_AMLOGIC_FBC_MEM_SAVING);
+		} else {
+			pfmt[0].sizeimage =
+				amvdec_amfbc_size(f->width, f->height, 0, 0);
+			f->modifier = DRM_FORMAT_MOD_AMLOGIC_FBC(
+				DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_BASIC |
+				DRM_FORMAT_MOD_AMLOGIC_FBC_MEM_SAVING);
+			pfmt[0].bytesperline = f->width;
 		}
-		break;
-	case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
-		fmt_out = sess->fmt_out;
-		break;
-	default:
-		return NULL;
+		f->num_planes = 1;
+	} else if (f->pixelformat == V4L2_PIX_FMT_AM10C) {
+		if (revision >= VDEC_REVISION_G12A) {
+			pfmt[0].sizeimage = MMU_COMPRESS_HEADER_SIZE;
+			f->modifier = DRM_FORMAT_MOD_AMLOGIC_FBC(
+				DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_SCATTER);
+		} else {
+			pfmt[0].sizeimage =
+				amvdec_amfbc_size(f->width, f->height, 1, 0);
+			f->modifier = DRM_FORMAT_MOD_AMLOGIC_FBC(
+				DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_BASIC);
+			pfmt[0].bytesperline = f->width;
+		}
+		f->num_planes = 1;
 	}
 
-	pixmp->width  = clamp(pixmp->width,  (u32)256, fmt_out->max_width);
-	pixmp->height = clamp(pixmp->height, (u32)144, fmt_out->max_height);
-	output_size = get_output_size(pixmp->width, pixmp->height);
-
-	if (f->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
-		if (!pfmt[0].sizeimage)
-			pfmt[0].sizeimage = sess->src_buffer_size;
-		pfmt[0].bytesperline = 0;
-		pixmp->num_planes = 1;
-	} else if (f->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
-		fmt_out = sess->fmt_out;
-		if (!vdec_supports_pixfmt_cap(fmt_out, pixmp->pixelformat))
-			pixmp->pixelformat = fmt_out->pixfmts_cap[0];
-
-		memset(pfmt[1].reserved, 0, sizeof(pfmt[1].reserved));
-		if (pixmp->pixelformat == V4L2_PIX_FMT_NV12M) {
-			pfmt[0].sizeimage = output_size;
-			pfmt[0].bytesperline = ALIGN(pixmp->width, 32);
-
-			pfmt[1].sizeimage = output_size / 2;
-			pfmt[1].bytesperline = ALIGN(pixmp->width, 32);
-			pixmp->num_planes = 2;
-		} else if (pixmp->pixelformat == V4L2_PIX_FMT_YUV420M) {
-			pfmt[0].sizeimage = output_size;
-			pfmt[0].bytesperline = ALIGN(pixmp->width, 32);
-
-			pfmt[1].sizeimage = output_size / 4;
-			pfmt[1].bytesperline = ALIGN(pixmp->width, 32) / 2;
-
-			pfmt[2].sizeimage = output_size / 2;
-			pfmt[2].bytesperline = ALIGN(pixmp->width, 32) / 2;
-			pixmp->num_planes = 3;
-		}
-	}
-
-	if (pixmp->field == V4L2_FIELD_ANY)
-		pixmp->field = V4L2_FIELD_NONE;
+	if (f->field == V4L2_FIELD_ANY)
+		f->field = V4L2_FIELD_NONE;
 
 	return fmt_out;
 }
 
-static int vdec_try_fmt(struct file *file, void *fh, struct v4l2_format *f)
+static const struct amvdec_format *
+vdec_try_fmt_common_out(struct amvdec_session *sess, u32 size,
+			struct v4l2_ext_pix_format *f)
 {
-	struct amvdec_session *sess =
-		container_of(file->private_data, struct amvdec_session, fh);
+	struct v4l2_plane_ext_pix_format *pfmt = f->plane_fmt;
+	const struct amvdec_format *fmts = sess->core->platform->formats;
+	const struct amvdec_format *fmt_out = NULL;
+	u32 output_size = 0;
 
-	vdec_try_fmt_common(sess, sess->core->platform->num_formats, f);
-
-	return 0;
-}
-
-static int vdec_g_fmt(struct file *file, void *fh, struct v4l2_format *f)
-{
-	struct amvdec_session *sess =
-		container_of(file->private_data, struct amvdec_session, fh);
-	struct v4l2_pix_format_mplane *pixmp = &f->fmt.pix_mp;
-
-	if (f->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)
-		pixmp->pixelformat = sess->pixfmt_cap;
-	else if (f->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)
-		pixmp->pixelformat = sess->fmt_out->pixfmt;
-
-	if (f->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
-		pixmp->width = sess->width;
-		pixmp->height = sess->height;
-		pixmp->colorspace = sess->colorspace;
-		pixmp->ycbcr_enc = sess->ycbcr_enc;
-		pixmp->quantization = sess->quantization;
-		pixmp->xfer_func = sess->xfer_func;
-	} else if (f->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
-		pixmp->width = sess->width;
-		pixmp->height = sess->height;
+	fmt_out = find_format(fmts, size, f->pixelformat);
+	if (!fmt_out) {
+		f->pixelformat = V4L2_PIX_FMT_MPEG2;
+		fmt_out = find_format(fmts, size, f->pixelformat);
 	}
 
-	vdec_try_fmt_common(sess, sess->core->platform->num_formats, f);
+	f->width  = clamp(f->width,  (u32)256, fmt_out->max_width);
+	f->height = clamp(f->height, (u32)144, fmt_out->max_height);
+	output_size = get_output_size(f->width, f->height);
+	if (!pfmt[0].sizeimage)
+		pfmt[0].sizeimage = sess->src_buffer_size;
+	pfmt[0].bytesperline = 0;
+	f->num_planes = 1;
+
+	if (f->field == V4L2_FIELD_ANY)
+		f->field = V4L2_FIELD_NONE;
+
+	return fmt_out;
+}
+
+static int vdec_try_fmt_cap(struct file *file, void *fh,
+			    struct v4l2_ext_pix_format *f)
+{
+	struct amvdec_session *sess =
+		container_of(file->private_data, struct amvdec_session, fh);
+
+	vdec_try_fmt_common_cap(sess, sess->core->platform->num_formats, f);
 
 	return 0;
 }
 
-static int vdec_s_fmt(struct file *file, void *fh, struct v4l2_format *f)
+static int vdec_try_fmt_out(struct file *file, void *fh,
+			    struct v4l2_ext_pix_format *f)
 {
 	struct amvdec_session *sess =
 		container_of(file->private_data, struct amvdec_session, fh);
-	struct v4l2_pix_format_mplane *pixmp = &f->fmt.pix_mp;
+
+	vdec_try_fmt_common_out(sess, sess->core->platform->num_formats, f);
+
+	return 0;
+}
+
+static int vdec_g_fmt_cap(struct file *file, void *fh,
+			  struct v4l2_ext_pix_format *f)
+{
+	struct amvdec_session *sess =
+		container_of(file->private_data, struct amvdec_session, fh);
+
+	f->pixelformat = sess->pixfmt_cap;
+	f->width = sess->width;
+	f->height = sess->height;
+	f->colorspace = sess->colorspace;
+	f->ycbcr_enc = sess->ycbcr_enc;
+	f->quantization = sess->quantization;
+	f->xfer_func = sess->xfer_func;
+	f->modifier = sess->modifier;
+
+	vdec_try_fmt_common_cap(sess, sess->core->platform->num_formats, f);
+
+	return 0;
+}
+
+static int vdec_g_fmt_out(struct file *file, void *fh,
+			  struct v4l2_ext_pix_format *f)
+{
+	struct amvdec_session *sess =
+		container_of(file->private_data, struct amvdec_session, fh);
+
+	f->pixelformat = sess->fmt_out->pixfmt;
+	f->width = sess->width;
+	f->height = sess->height;
+
+	vdec_try_fmt_common_out(sess, sess->core->platform->num_formats, f);
+
+	return 0;
+}
+
+static int vdec_s_fmt_cap(struct file *file, void *fh,
+			  struct v4l2_ext_pix_format *f)
+{
+	struct amvdec_session *sess =
+		container_of(file->private_data, struct amvdec_session, fh);
 	u32 num_formats = sess->core->platform->num_formats;
 	const struct amvdec_format *fmt_out;
-	struct v4l2_pix_format_mplane orig_pixmp;
-	struct v4l2_format format;
-	u32 pixfmt_out = 0, pixfmt_cap = 0;
+	struct v4l2_ext_pix_format orig_format;
+	struct v4l2_ext_pix_format format;
+	u32 pixfmt_cap = 0;
 
-	orig_pixmp = *pixmp;
+	orig_format = *f;
 
-	fmt_out = vdec_try_fmt_common(sess, num_formats, f);
+	fmt_out = vdec_try_fmt_common_cap(sess, num_formats, f);
 	if (!fmt_out)
 		return -EINVAL;
 
-	if (f->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
-		pixfmt_out = pixmp->pixelformat;
-		pixfmt_cap = sess->pixfmt_cap;
-	} else if (f->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
-		pixfmt_cap = pixmp->pixelformat;
-		pixfmt_out = sess->fmt_out->pixfmt;
-	}
+	pixfmt_cap = f->pixelformat;
 
 	memset(&format, 0, sizeof(format));
+	format.pixelformat = pixfmt_cap;
+	format.width = orig_format.width;
+	format.height = orig_format.height;
+	vdec_try_fmt_common_cap(sess, num_formats, &format);
 
-	format.type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
-	format.fmt.pix_mp.pixelformat = pixfmt_out;
-	format.fmt.pix_mp.width = orig_pixmp.width;
-	format.fmt.pix_mp.height = orig_pixmp.height;
-	vdec_try_fmt_common(sess, num_formats, &format);
+	sess->width = format.width;
+	sess->height = format.height;
+	sess->pixfmt_cap = format.pixelformat;
+	sess->modifier = format.modifier;
 
-	if (f->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
-		sess->width = format.fmt.pix_mp.width;
-		sess->height = format.fmt.pix_mp.height;
-		sess->colorspace = pixmp->colorspace;
-		sess->ycbcr_enc = pixmp->ycbcr_enc;
-		sess->quantization = pixmp->quantization;
-		sess->xfer_func = pixmp->xfer_func;
-		sess->src_buffer_size = pixmp->plane_fmt[0].sizeimage;
-	}
+	return 0;
+}
+
+static int vdec_s_fmt_out(struct file *file, void *fh,
+			  struct v4l2_ext_pix_format *f)
+{
+	struct amvdec_session *sess =
+		container_of(file->private_data, struct amvdec_session, fh);
+	u32 num_formats = sess->core->platform->num_formats;
+	const struct amvdec_format *fmt_out;
+	struct v4l2_ext_pix_format orig_format;
+	struct v4l2_ext_pix_format format;
+	u32 pixfmt_out = 0;
+
+	orig_format = *f;
+
+	fmt_out = vdec_try_fmt_common_out(sess, num_formats, f);
+	if (!fmt_out)
+		return -EINVAL;
+
+	pixfmt_out = f->pixelformat;
 
 	memset(&format, 0, sizeof(format));
+	format.pixelformat = pixfmt_out;
+	format.width = orig_format.width;
+	format.height = orig_format.height;
+	vdec_try_fmt_common_out(sess, num_formats, &format);
 
-	format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-	format.fmt.pix_mp.pixelformat = pixfmt_cap;
-	format.fmt.pix_mp.width = orig_pixmp.width;
-	format.fmt.pix_mp.height = orig_pixmp.height;
-	vdec_try_fmt_common(sess, num_formats, &format);
-
-	sess->width = format.fmt.pix_mp.width;
-	sess->height = format.fmt.pix_mp.height;
-
-	if (f->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)
-		sess->fmt_out = fmt_out;
-	else if (f->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)
-		sess->pixfmt_cap = format.fmt.pix_mp.pixelformat;
+	sess->width = format.width;
+	sess->height = format.height;
+	sess->colorspace = f->colorspace;
+	sess->ycbcr_enc = f->ycbcr_enc;
+	sess->quantization = f->quantization;
+	sess->xfer_func = f->xfer_func;
+	sess->src_buffer_size = f->plane_fmt[0].sizeimage;
+	sess->width = format.width;
+	sess->height = format.height;
+	sess->fmt_out = fmt_out;
 
 	return 0;
 }
@@ -788,12 +875,12 @@ static const struct v4l2_ioctl_ops vdec_ioctl_ops = {
 	.vidioc_querycap = vdec_querycap,
 	.vidioc_enum_fmt_vid_cap = vdec_enum_fmt,
 	.vidioc_enum_fmt_vid_out = vdec_enum_fmt,
-	.vidioc_s_fmt_vid_cap_mplane = vdec_s_fmt,
-	.vidioc_s_fmt_vid_out_mplane = vdec_s_fmt,
-	.vidioc_g_fmt_vid_cap_mplane = vdec_g_fmt,
-	.vidioc_g_fmt_vid_out_mplane = vdec_g_fmt,
-	.vidioc_try_fmt_vid_cap_mplane = vdec_try_fmt,
-	.vidioc_try_fmt_vid_out_mplane = vdec_try_fmt,
+	.vidioc_s_ext_fmt_vid_cap = vdec_s_fmt_cap,
+	.vidioc_s_ext_fmt_vid_out = vdec_s_fmt_out,
+	.vidioc_g_ext_fmt_vid_cap = vdec_g_fmt_cap,
+	.vidioc_g_ext_fmt_vid_out = vdec_g_fmt_out,
+	.vidioc_try_ext_fmt_vid_cap = vdec_try_fmt_cap,
+	.vidioc_try_ext_fmt_vid_out = vdec_try_fmt_out,
 	.vidioc_reqbufs = v4l2_m2m_ioctl_reqbufs,
 	.vidioc_querybuf = v4l2_m2m_ioctl_querybuf,
 	.vidioc_prepare_buf = v4l2_m2m_ioctl_prepare_buf,
@@ -912,6 +999,7 @@ static int vdec_open(struct file *file)
 	sess->pixelaspect.numerator = 1;
 	sess->pixelaspect.denominator = 1;
 	sess->src_buffer_size = SZ_1M;
+	sess->modifier = DRM_FORMAT_MOD_LINEAR;
 
 	INIT_LIST_HEAD(&sess->timestamps);
 	INIT_LIST_HEAD(&sess->bufs_recycle);

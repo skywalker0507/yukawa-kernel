@@ -31,6 +31,7 @@ void amvdec_write_parser(struct amvdec_core *core, u32 reg, u32 val);
 u32 amvdec_amfbc_body_size(u32 width, u32 height, u32 is_10bit, u32 use_mmu);
 u32 amvdec_amfbc_head_size(u32 width, u32 height);
 u32 amvdec_amfbc_size(u32 width, u32 height, u32 is_10bit, u32 use_mmu);
+u32 amvdec_is_dst_fbc(struct amvdec_session *sess);
 
 /**
  * amvdec_dst_buf_done_idx() - Signal that a buffer is done decoding

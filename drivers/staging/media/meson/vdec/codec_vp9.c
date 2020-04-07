@@ -948,7 +948,8 @@ static void codec_vp9_set_sao(struct amvdec_session *sess,
 		val &= ~0x3;
 		if (!codec_hevc_use_fbc(sess->pixfmt_cap, vp9->is_10bit))
 			val |= BIT(0); /* disable cm compression */
-		/* TOFIX: Handle Amlogic Framebuffer compression */
+		else if (amvdec_is_dst_fbc(sess))
+			val |= BIT(1); /* Disable double write */
 	}
 
 	amvdec_write_dos(core, HEVC_SAO_CTRL1, val);
