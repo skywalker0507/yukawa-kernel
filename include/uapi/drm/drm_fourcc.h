@@ -804,6 +804,10 @@ extern "C" {
  */
 #define DRM_FORMAT_MOD_AMLOGIC_FBC(__modes) fourcc_mod_code(AMLOGIC, __modes)
 
+
+/* Amlogic FBC Layouts */
+#define DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_MASK		(0xf << 0)
+
 /*
  * Amlogic FBC Basic Layout
  *
@@ -829,9 +833,8 @@ extern "C" {
  */
 #define DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_SCATTER	(2ULL << 0)
 
-/*
- * Amlogic FBC Layout Options
- */
+/* Amlogic FBC Layout Options */
+#define DRM_FORMAT_MOD_AMLOGIC_FBC_OPTIONS_MASK		(0xf << 8)
 
 /*
  * Amlogic FBC Memory Saving mode

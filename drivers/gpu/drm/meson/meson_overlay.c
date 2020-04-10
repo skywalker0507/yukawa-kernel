@@ -487,7 +487,8 @@ static void meson_overlay_atomic_update(struct drm_plane *plane,
 					  AFBC_HOLD_LINE_NUM(8) |
 					  AFBC_BURST_LEN(2);
 
-		if (fb->modifier & DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_SCATTER)
+		if ((fb->modifier & DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_MASK) ==
+				DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_SCATTER)
 			priv->viu.vd1_afbc_mode |= AFBC_SCATTER_MODE;
 
 		if (fb->modifier & DRM_FORMAT_MOD_AMLOGIC_FBC_MEM_SAVING)
@@ -751,10 +752,40 @@ static bool meson_overlay_format_mod_supported(struct drm_plane *plane,
 		return true;
 
 	if ((modifier & DRM_FORMAT_MOD_AMLOGIC_FBC(0)) ==
-			DRM_FORMAT_MOD_AMLOGIC_FBC(0) &&
-	    (format == DRM_FORMAT_YUV420_8BIT ||
-	     format == DRM_FORMAT_YUV420_10BIT))
+			DRM_FORMAT_MOD_AMLOGIC_FBC(0)) {
+		unsigned int layout = modifier &
+			DRM_FORMAT_MOD_AMLOGIC_FBC(
+				DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_MASK);
+		unsigned int options = modifier &
+			DRM_FORMAT_MOD_AMLOGIC_FBC(
+				DRM_FORMAT_MOD_AMLOGIC_FBC_OPTIONS_MASK);
+
+	    	if (format != DRM_FORMAT_YUV420_8BIT &&
+		    format != DRM_FORMAT_YUV420_10BIT) {
+			DRM_DEBUG_KMS("%llx invalid format 0x%08x\n",
+				      modifier, format);
+			return false;
+		}
+
+		if (layout != DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_BASIC &&
+		    layout != DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_SCATTER) {
+			DRM_DEBUG_KMS("%llx invalid layout %x\n",
+				      modifier, layout);
+			return false;
+		}
+
+		if (options &&
+		    options != DRM_FORMAT_MOD_AMLOGIC_FBC_MEM_SAVING) {
+			DRM_DEBUG_KMS("%llx invalid layout %x\n",
+				      modifier, layout);
+			return false;
+		}
+
 		return true;
+	}
+
+	DRM_DEBUG_KMS("invalid modifier %llx for format 0x%08x\n",
+		      modifier, format);
 
 	return false;
 }
@@ -787,6 +818,7 @@ static const uint64_t format_modifiers[] = {
 				   DRM_FORMAT_MOD_AMLOGIC_FBC_MEM_SAVING),
 	DRM_FORMAT_MOD_AMLOGIC_FBC(DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_BASIC |
 				   DRM_FORMAT_MOD_AMLOGIC_FBC_MEM_SAVING),
+	DRM_FORMAT_MOD_AMLOGIC_FBC(DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_SCATTER),
 	DRM_FORMAT_MOD_AMLOGIC_FBC(DRM_FORMAT_MOD_AMLOGIC_FBC_LAYOUT_BASIC),
 	DRM_FORMAT_MOD_LINEAR,
 	DRM_FORMAT_MOD_INVALID,
