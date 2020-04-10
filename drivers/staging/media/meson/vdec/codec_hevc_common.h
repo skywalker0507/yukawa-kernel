@@ -41,8 +41,8 @@ struct codec_hevc_common {
 /* Returns 1 if we must use framebuffer compression */
 static inline int codec_hevc_use_fbc(u32 pixfmt, int is_10bit)
 {
-	return pixfmt == V4L2_PIX_FMT_AM08C ||
-	       pixfmt == V4L2_PIX_FMT_AM10C ||
+	return pixfmt == V4L2_PIX_FMT_YUV420_8BIT ||
+	       pixfmt == V4L2_PIX_FMT_YUV420_10BIT ||
 	       is_10bit;
 }
 

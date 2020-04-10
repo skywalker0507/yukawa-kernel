@@ -86,8 +86,8 @@ u32 amvdec_amfbc_size(u32 width, u32 height, u32 is_10bit, u32 use_mmu)
 EXPORT_SYMBOL_GPL(amvdec_amfbc_size);
 
 u32 amvdec_is_dst_fbc(struct amvdec_session *sess) {
-	return sess->pixfmt_cap == V4L2_PIX_FMT_AM08C ||
-	       sess->pixfmt_cap == V4L2_PIX_FMT_AM10C;
+	return sess->pixfmt_cap == V4L2_PIX_FMT_YUV420_8BIT ||
+	       sess->pixfmt_cap == V4L2_PIX_FMT_YUV420_10BIT;
 }
 EXPORT_SYMBOL_GPL(amvdec_is_dst_fbc);
 
@@ -458,12 +458,12 @@ void amvdec_src_change(struct amvdec_session *sess, u32 width,
 
 	v4l2_ctrl_s_ctrl(sess->ctrl_min_buf_capture, dpb_size);
 
-	if (sess->pixfmt_cap == V4L2_PIX_FMT_AM08C &&
+	if (sess->pixfmt_cap == V4L2_PIX_FMT_YUV420_8BIT &&
 	    bitdepth == 10)
-		sess->pixfmt_cap = V4L2_PIX_FMT_AM10C;
-	else if (sess->pixfmt_cap == V4L2_PIX_FMT_AM10C &&
+		sess->pixfmt_cap = V4L2_PIX_FMT_YUV420_10BIT;
+	else if (sess->pixfmt_cap == V4L2_PIX_FMT_YUV420_10BIT &&
 		 bitdepth == 8)
-		 sess->pixfmt_cap = V4L2_PIX_FMT_AM08C;
+		 sess->pixfmt_cap = V4L2_PIX_FMT_YUV420_8BIT;
 
 	sess->bitdepth = bitdepth;
 
