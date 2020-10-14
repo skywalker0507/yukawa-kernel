@@ -1,6 +1,6 @@
 /*
  *
- * (C) COPYRIGHT 2010, 2012-2014 ARM Limited. All rights reserved.
+ * (C) COPYRIGHT 2019 ARM Limited. All rights reserved.
  *
  * This program is free software and is provided to you under the terms of the
  * GNU General Public License version 2 as published by the Free Software
@@ -20,39 +20,19 @@
  *
  */
 
-
-
-/**
- * @file mali_ukk_os.h
- * Types and definitions that are common for Linux OSs for the kernel side of the
- * User-Kernel interface.
+/*
+ * Backend-specific Power Manager level 2 cache state definitions.
+ * The function-like macro KBASEP_L2_STATE() must be defined before including
+ * this header file. This header file can be included multiple times in the
+ * same compilation unit with different definitions of KBASEP_L2_STATE().
  */
-
-#ifndef _UKK_OS_H_ /* Linux version */
-#define _UKK_OS_H_
-
-#include <linux/fs.h>
-
-/**
- * @addtogroup uk_api User-Kernel Interface API
- * @{
- */
-
-/**
- * @addtogroup uk_api_kernel UKK (Kernel side)
- * @{
- */
-
-/**
- * Internal OS specific data structure associated with each UKK session. Part
- * of a ukk_session object.
- */
-typedef struct ukkp_session {
-	int dummy;     /**< No internal OS specific data at this time */
-} ukkp_session;
-
-/** @} end group uk_api_kernel */
-
-/** @} end group uk_api */
-
-#endif /* _UKK_OS_H__ */
+KBASEP_L2_STATE(OFF)
+KBASEP_L2_STATE(PEND_ON)
+KBASEP_L2_STATE(RESTORE_CLOCKS)
+KBASEP_L2_STATE(ON_HWCNT_ENABLE)
+KBASEP_L2_STATE(ON)
+KBASEP_L2_STATE(ON_HWCNT_DISABLE)
+KBASEP_L2_STATE(SLOW_DOWN_CLOCKS)
+KBASEP_L2_STATE(POWER_DOWN)
+KBASEP_L2_STATE(PEND_OFF)
+KBASEP_L2_STATE(RESET_WAIT)
