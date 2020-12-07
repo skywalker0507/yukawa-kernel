@@ -4,6 +4,7 @@
  * Author: Neil Armstrong <narmstrong@baylibre.com>
  */
 
+#include <linux/backlight.h>
 #include <linux/delay.h>
 #include <linux/gpio/consumer.h>
 #include <linux/module.h>
@@ -23,6 +24,7 @@ struct khadas_ts050_panel {
 	struct drm_panel base;
 	struct mipi_dsi_device *link;
 
+	struct backlight_device *backlight;	
 	struct regulator *supply;
 	struct gpio_desc *reset_gpio;
 	struct gpio_desc *enable_gpio;
@@ -582,8 +584,8 @@ struct khadas_ts050_panel *to_khadas_ts050_panel(struct drm_panel *panel)
 static int khadas_ts050_panel_prepare(struct drm_panel *panel)
 {
 	struct khadas_ts050_panel *khadas_ts050 = to_khadas_ts050_panel(panel);
-	int err, regulator_err;
 	unsigned int i;
+	int err;
 
 	if (khadas_ts050->prepared)
 		return 0;
@@ -657,10 +659,9 @@ static int khadas_ts050_panel_prepare(struct drm_panel *panel)
 
 poweroff:
 	gpiod_set_value_cansleep(khadas_ts050->enable_gpio, 0);
+	gpiod_set_value_cansleep(khadas_ts050->reset_gpio, 1);
 
-	regulator_err = regulator_disable(khadas_ts050->supply);
-	if (regulator_err)
-		dev_err(panel->dev, "failed to disable regulator: %d\n", regulator_err);
+	regulator_disable(khadas_ts050->supply);
 
 	return err;
 }
@@ -669,8 +670,7 @@ static int khadas_ts050_panel_enable(struct drm_panel *panel)
 {
 	struct khadas_ts050_panel *khadas_ts050 = to_khadas_ts050_panel(panel);
 
-	if (khadas_ts050->enabled)
-		return 0;
+	backlight_enable(khadas_ts050->backlight);
 
 	khadas_ts050->enabled = true;
 
@@ -684,6 +684,8 @@ static int khadas_ts050_panel_disable(struct drm_panel *panel)
 
 	if (!khadas_ts050->enabled)
 		return 0;
+
+	backlight_disable(khadas_ts050->backlight);
 
 	err = mipi_dsi_dcs_set_display_off(khadas_ts050->link);
 	if (err < 0)
@@ -705,18 +707,14 @@ static int khadas_ts050_panel_unprepare(struct drm_panel *panel)
 		return 0;
 
 	err = mipi_dsi_dcs_enter_sleep_mode(khadas_ts050->link);
-	if (err < 0) {
+	if (err < 0)
 		dev_err(panel->dev, "failed to enter sleep mode: %d\n", err);
-		return err;
-	}
 
 	msleep(150);
 
 	gpiod_set_value_cansleep(khadas_ts050->enable_gpio, 0);
 
-	err = regulator_disable(khadas_ts050->supply);
-	if (err < 0)
-		return err;
+	regulator_disable(khadas_ts050->supply);
 
 	khadas_ts050->prepared = false;
 
@@ -736,16 +734,15 @@ static const struct drm_display_mode default_mode = {
 	.flags = DRM_MODE_FLAG_NHSYNC | DRM_MODE_FLAG_NVSYNC,
 };
 
-static int khadas_ts050_panel_get_modes(struct drm_panel *panel,
-				       struct drm_connector *connector)
+static int khadas_ts050_panel_get_modes(struct drm_panel *panel)
 {
 	struct drm_display_mode *mode;
+	struct drm_connector *connector = panel->connector;
 
 	mode = drm_mode_duplicate(connector->dev, &default_mode);
 	if (!mode) {
-		dev_err(panel->dev, "failed to add mode %ux%u@%u\n",
-			default_mode.hdisplay, default_mode.vdisplay,
-			drm_mode_vrefresh(&default_mode));
+		dev_err(panel->dev, "failed to add mode %ux%u\n",
+			default_mode.hdisplay, default_mode.vdisplay);
 		return -ENOMEM;
 	}
 
@@ -799,12 +796,13 @@ static int khadas_ts050_panel_add(struct khadas_ts050_panel *khadas_ts050)
 		return err;
 	}
 
-	drm_panel_init(&khadas_ts050->base, &khadas_ts050->link->dev,
-		       &khadas_ts050_panel_funcs, DRM_MODE_CONNECTOR_DSI);
+	drm_panel_init(&khadas_ts050->base);
+	khadas_ts050->base.dev = &khadas_ts050->link->dev;
+	khadas_ts050->base.funcs = &khadas_ts050_panel_funcs;
 
-	err = drm_panel_of_backlight(&khadas_ts050->base);
-	if (err)
-		return err;
+	khadas_ts050->backlight = devm_of_find_backlight(dev);
+	if (IS_ERR(khadas_ts050->backlight))
+		return PTR_ERR(khadas_ts050->backlight);
 
 	drm_panel_add(&khadas_ts050->base);
 
