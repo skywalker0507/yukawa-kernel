@@ -259,6 +259,13 @@ static int vb2_fill_vb2_v4l2_buffer(struct vb2_buffer *vb, struct v4l2_buffer *b
 						psrc->bytesused : pdst->length;
 				pdst->data_offset = psrc->data_offset;
 			}
+		} else {
+			for (plane = 0; plane < vb->num_planes; ++plane) {
+				struct vb2_plane *pdst = &planes[plane];
+				struct v4l2_plane *psrc = &b->m.planes[plane];
+
+				pdst->data_offset = psrc->data_offset;
+			}
 		}
 	} else {
 		/*

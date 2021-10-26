@@ -171,6 +171,10 @@ static int set_canvas_nv12m(struct amvdec_session *sess,
 		    vb2_dma_contig_plane_dma_addr(vb, i);
 	}
 
+	if (buf_paddr[0] == buf_paddr[1]) {
+		buf_paddr[1] += vb->planes[1].data_offset;
+	}
+
 	/* Y plane */
 	meson_canvas_config(core->canvas, canvas_id[0], buf_paddr[0],
 			    width, height, MESON_CANVAS_WRAP_NONE,
