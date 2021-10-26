@@ -216,6 +216,8 @@ static u32 esparser_pad_start_code(struct amvdec_core *core,
 static int
 esparser_write_data(struct amvdec_core *core, dma_addr_t addr, u32 size)
 {
+	int ret;
+
 	amvdec_write_parser(core, PFIFO_RD_PTR, 0);
 	amvdec_write_parser(core, PFIFO_WR_PTR, 0);
 	amvdec_write_parser(core, PARSER_CONTROL,
@@ -230,7 +232,19 @@ esparser_write_data(struct amvdec_core *core, dma_addr_t addr, u32 size)
 			    (size + SEARCH_PATTERN_LEN));
 
 	search_done = 0;
-	return wait_event_interruptible_timeout(wq, search_done, (HZ / 5));
+	ret = wait_event_interruptible_timeout(wq, search_done, (HZ / 5));
+
+	if (ret <= 0) {
+		uint32_t int_status = amvdec_read_parser(core, PARSER_INT_STATUS);
+		amvdec_write_parser(core, PARSER_INT_STATUS, int_status);
+
+		pr_info("%s() stat %x\n", __func__, int_status);
+
+		if (int_status & PARSER_INTSTAT_SC_FOUND)
+			return 0;
+	}
+
+	return ret;
 }
 
 static u32 esparser_vififo_get_free_space(struct amvdec_session *sess)
@@ -353,7 +367,7 @@ esparser_queue(struct amvdec_session *sess, struct vb2_v4l2_buffer *vbuf)
 
 	if (ret <= 0) {
 		dev_warn(core->dev, "esparser: input parsing error\n");
-		amvdec_remove_ts(sess, vb->timestamp);
+		//amvdec_remove_ts(sess, vb->timestamp);
 		v4l2_m2m_buf_done(vbuf, VB2_BUF_STATE_ERROR);
 		amvdec_write_parser(core, PARSER_FETCH_CMD, 0);
 
