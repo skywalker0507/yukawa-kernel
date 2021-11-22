@@ -810,7 +810,7 @@ static int codec_vp9_start(struct amvdec_session *sess)
 	amvdec_write_dos(core, DECODE_STOP_POS, 0);
 	amvdec_write_dos(core, VP9_DECODE_MODE, DECODE_MODE_SINGLE);
 
-	pr_debug("decode_count: %u; decode_size: %u\n",
+	pr_info("decode_count: %u; decode_size: %u\n",
 		 amvdec_read_dos(core, HEVC_DECODE_COUNT),
 		 amvdec_read_dos(core, HEVC_DECODE_SIZE));
 
@@ -937,7 +937,7 @@ static void codec_vp9_set_sao(struct amvdec_session *sess,
 		if (sess->width >= 1280)
 			amvdec_write_dos_bits(core, HEVC_DBLK_CFGB, BIT(4));
 
-		pr_debug("HEVC_DBLK_CFGB: %08X\n",
+		pr_info("HEVC_DBLK_CFGB: %08X\n",
 			 amvdec_read_dos(core, HEVC_DBLK_CFGB));
 	}
 
@@ -952,7 +952,7 @@ static void codec_vp9_set_sao(struct amvdec_session *sess,
 	}
 
 	amvdec_write_dos(core, HEVC_SAO_CTRL1, val);
-	pr_debug("HEVC_SAO_CTRL1: %08X\n", val);
+	pr_info("HEVC_SAO_CTRL1: %08X\n", val);
 
 	/* no downscale for NV12 */
 	val = amvdec_read_dos(core, HEVC_SAO_CTRL5) & ~0xff0000;
@@ -1019,7 +1019,7 @@ static void codec_vp9_update_next_ref(struct codec_vp9 *vp9)
 				0xff : param->p.refresh_frame_flags;
 
 	for (mask = refresh_frame_flags; mask; mask >>= 1) {
-		pr_debug("mask=%08X; ref_index=%d\n", mask, ref_index);
+		pr_info("mask=%08X; ref_index=%d\n", mask, ref_index);
 		if (mask & 1)
 			vp9->next_ref_frame_map[ref_index] = buf_idx;
 		else
@@ -1230,7 +1230,7 @@ static void codec_vp9_show_existing_frame(struct codec_vp9 *vp9)
 	if (!param->p.show_existing_frame)
 		return;
 
-	pr_debug("showing frame %u\n", param->p.frame_to_show_idx);
+	pr_info("showing frame %u\n", param->p.frame_to_show_idx);
 }
 
 static void codec_vp9_rm_noshow_frame(struct amvdec_session *sess)
@@ -1242,7 +1242,7 @@ static void codec_vp9_rm_noshow_frame(struct amvdec_session *sess)
 		if (tmp->show)
 			continue;
 
-		pr_debug("rm noshow: %u\n", tmp->index);
+		pr_info("rm noshow: %u\n", tmp->index);
 		v4l2_m2m_buf_queue(sess->m2m_ctx, tmp->vbuf);
 		list_del(&tmp->list);
 		kfree(tmp);
@@ -1265,7 +1265,7 @@ static void codec_vp9_process_frame(struct amvdec_session *sess)
 	if (!vp9->cur_frame)
 		return;
 
-	pr_debug("frame %d: type: %08X; show_exist: %u; show: %u, intra_only: %u\n",
+	pr_info("frame %d: type: %08X; show_exist: %u; show: %u, intra_only: %u\n",
 		 vp9->cur_frame->index,
 		 param->p.frame_type, param->p.show_existing_frame,
 		 param->p.show_frame, param->p.intra_only);
@@ -1393,7 +1393,7 @@ static int codec_vp9_process_rpm(struct codec_vp9 *vp9)
 	vp9->height = param->p.height;
 	vp9->is_10bit = is_10bit;
 
-	pr_debug("width: %u; height: %u; is_10bit: %d; src_changed: %d\n",
+	pr_info("width: %u; height: %u; is_10bit: %d; src_changed: %d\n",
 		 vp9->width, vp9->height, is_10bit, src_changed);
 
 	return src_changed;
@@ -1420,7 +1420,7 @@ static void codec_vp9_show_frame(struct amvdec_session *sess)
 			continue;
 
 		if (!tmp->done) {
-			pr_debug("Doning %u\n", tmp->index);
+			pr_info("Doning %u\n", tmp->index);
 			amvdec_dst_buf_done(sess, tmp->vbuf, V4L2_FIELD_NONE);
 			tmp->done = 1;
 			vp9->frames_num--;
@@ -1429,7 +1429,7 @@ static void codec_vp9_show_frame(struct amvdec_session *sess)
 		if (codec_vp9_is_ref(vp9, tmp) || tmp == vp9->prev_frame)
 			continue;
 
-		pr_debug("deleting %d\n", tmp->index);
+		pr_info("deleting %d\n", tmp->index);
 		list_del(&tmp->list);
 		kfree(tmp);
 	}
@@ -2092,7 +2092,7 @@ static irqreturn_t codec_vp9_threaded_isr(struct amvdec_session *sess)
 		goto unlock;
 	}
 
-	pr_debug("ISR: %08X;%08X\n", dec_status, prob_status);
+	pr_info("ISR: %08X;%08X\n", dec_status, prob_status);
 	sess->keyframe_found = 1;
 
 	if ((prob_status & 0xff) == 0xfd && vp9->cur_frame) {

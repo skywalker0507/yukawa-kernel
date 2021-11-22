@@ -65,6 +65,8 @@ static irqreturn_t esparser_isr(int irq, void *dev)
 	int_status = amvdec_read_parser(core, PARSER_INT_STATUS);
 	amvdec_write_parser(core, PARSER_INT_STATUS, int_status);
 
+	pr_info("%s() stat %x\n", __func__, int_status);
+
 	if (int_status & PARSER_INTSTAT_SC_FOUND) {
 		amvdec_write_parser(core, PFIFO_RD_PTR, 0);
 		amvdec_write_parser(core, PFIFO_WR_PTR, 0);
@@ -168,7 +170,7 @@ static int vp9_update_header(struct amvdec_core *core, struct vb2_buffer *buf)
 		if (!old_header) {
 			/* nothing */
 		} else if (old_header > fdata + 16 + framesize) {
-			dev_dbg(core->dev, "%s: data has gaps, setting to 0\n",
+			dev_info(core->dev, "%s: data has gaps, setting to 0\n",
 				__func__);
 			memset(fdata + 16 + framesize, 0,
 			       (old_header - fdata + 16 + framesize));
@@ -233,17 +235,6 @@ esparser_write_data(struct amvdec_core *core, dma_addr_t addr, u32 size)
 
 	search_done = 0;
 	ret = wait_event_interruptible_timeout(wq, search_done, (HZ / 5));
-
-	if (ret <= 0) {
-		uint32_t int_status = amvdec_read_parser(core, PARSER_INT_STATUS);
-		amvdec_write_parser(core, PARSER_INT_STATUS, int_status);
-
-		pr_info("%s() stat %x\n", __func__, int_status);
-
-		if (int_status & PARSER_INTSTAT_SC_FOUND)
-			return 0;
-	}
-
 	return ret;
 }
 
@@ -302,6 +293,8 @@ static u32 esparser_get_offset(struct amvdec_session *sess)
 	return offset;
 }
 
+int esparser_power_up(struct amvdec_session *sess);
+
 static int
 esparser_queue(struct amvdec_session *sess, struct vb2_v4l2_buffer *vbuf)
 {
@@ -314,6 +307,7 @@ esparser_queue(struct amvdec_session *sess, struct vb2_v4l2_buffer *vbuf)
 	u32 num_dst_bufs = 0;
 	u32 offset;
 	u32 pad_size;
+	u32 wp, wp2;
 
 	/*
 	 * When max ref frame is held by VP9, this should be -= 3 to prevent a
@@ -343,7 +337,7 @@ esparser_queue(struct amvdec_session *sess, struct vb2_v4l2_buffer *vbuf)
 	offset = esparser_get_offset(sess);
 
 	amvdec_add_ts(sess, vb->timestamp, vbuf->timecode, offset, vbuf->flags);
-	dev_dbg(core->dev, "esparser: ts = %llu pld_size = %u offset = %08X flags = %08X\n",
+	dev_info(core->dev, "esparser: ts = %llu pld_size = %u offset = %08X flags = %08X\n",
 		vb->timestamp, payload_size, offset, vbuf->flags);
 
 	vbuf->flags = 0;
@@ -363,15 +357,26 @@ esparser_queue(struct amvdec_session *sess, struct vb2_v4l2_buffer *vbuf)
 	}
 
 	pad_size = esparser_pad_start_code(core, vb, payload_size);
+	wp = amvdec_read_parser(core, PARSER_VIDEO_WP);
 	ret = esparser_write_data(core, phy, payload_size + pad_size);
+	wp2 = amvdec_read_parser(core, PARSER_VIDEO_WP);
+	dev_err(core->dev, "esparser: parser ret %d (%x <=> %x)\n", ret, wp, wp2);
 
 	if (ret <= 0) {
-		dev_warn(core->dev, "esparser: input parsing error\n");
-		//amvdec_remove_ts(sess, vb->timestamp);
-		v4l2_m2m_buf_done(vbuf, VB2_BUF_STATE_ERROR);
 		amvdec_write_parser(core, PARSER_FETCH_CMD, 0);
 
-		return 0;
+		if (ret < 0 || wp2 == wp) {
+			dev_err(core->dev, "esparser: input parsing error ret %d (%x <=> %x)\n", ret, wp, wp2);
+			//amvdec_remove_ts(sess, vb->timestamp);
+			//v4l2_m2m_buf_done(vbuf, VB2_BUF_STATE_ERROR);
+
+			//return 0;
+		}
+
+		//u8 *vaddr = vb2_plane_vaddr(vb, 0);
+		//print_hex_dump(KERN_INFO, "", DUMP_PREFIX_NONE, 16, 1,
+		//				       vaddr, payload_size + pad_size, true);
+		//esparser_power_up(sess);
 	}
 
 	atomic_inc(&sess->esparser_queued_bufs);

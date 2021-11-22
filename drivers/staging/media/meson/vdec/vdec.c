@@ -783,7 +783,7 @@ vdec_decoder_cmd(struct file *file, void *fh, struct v4l2_decoder_cmd *cmd)
 	if (cmd->cmd != V4L2_DEC_CMD_STOP)
 		return -EINVAL;
 
-	dev_dbg(dev, "Received V4L2_DEC_CMD_STOP\n");
+	dev_info(dev, "Received V4L2_DEC_CMD_STOP\n");
 
 	sess->should_stop = 1;
 

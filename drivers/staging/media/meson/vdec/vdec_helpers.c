@@ -173,6 +173,7 @@ static int set_canvas_nv12m(struct amvdec_session *sess,
 
 	if (buf_paddr[0] == buf_paddr[1]) {
 		buf_paddr[1] += vb->planes[1].data_offset;
+		pr_info("%s() buf_paddr %x/%x\n", __func__, buf_paddr[0], buf_paddr[1]);
 	}
 
 	/* Y plane */
@@ -330,7 +331,7 @@ static void dst_buf_done(struct amvdec_session *sess,
 	    atomic_read(&sess->esparser_queued_bufs) <= 1) {
 		const struct v4l2_event ev = { .type = V4L2_EVENT_EOS };
 
-		dev_dbg(dev, "Signaling EOS, sequence_cap = %u\n",
+		dev_info(dev, "Signaling EOS, sequence_cap = %u\n",
 			sess->sequence_cap - 1);
 		v4l2_event_queue_fh(&sess->fh, &ev);
 		vbuf->flags |= V4L2_BUF_FLAG_LAST;
@@ -339,10 +340,10 @@ static void dst_buf_done(struct amvdec_session *sess,
 		vbuf->flags |= V4L2_BUF_FLAG_LAST;
 		sess->sequence_cap = 0;
 	} else if (sess->should_stop)
-		dev_dbg(dev, "should_stop, %u bufs remain\n",
+		dev_info(dev, "should_stop, %u bufs remain\n",
 			atomic_read(&sess->esparser_queued_bufs));
 
-	dev_dbg(dev, "Buffer %u done, ts = %llu, flags = %08X\n",
+	dev_info(dev, "Buffer %u done, ts = %llu, flags = %08X\n",
 		vbuf->vb2_buf.index, timestamp, flags);
 	vbuf->field = field;
 	v4l2_m2m_buf_done(vbuf, VB2_BUF_STATE_DONE);
@@ -505,7 +506,7 @@ void amvdec_src_change(struct amvdec_session *sess, u32 width,
 		 bitdepth == 8)
 		sess->pixfmt_cap = V4L2_PIX_FMT_YUV420_8BIT;
 
-	dev_dbg(sess->core->dev, "Res. changed (%ux%u), DPB %u, bitdepth %u\n",
+	dev_info(sess->core->dev, "Res. changed (%ux%u), DPB %u, bitdepth %u\n",
 		width, height, dpb_size, bitdepth);
 	v4l2_event_queue_fh(&sess->fh, &ev);
 }

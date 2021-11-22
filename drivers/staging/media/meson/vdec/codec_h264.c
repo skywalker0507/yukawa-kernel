@@ -292,7 +292,7 @@ static void codec_h264_resume(struct amvdec_session *sess)
 			    (u32[]){ ANC0_CANVAS_ADDR, 0 },
 			    (u32[]){ 24, 0 });
 
-	dev_dbg(core->dev, "max_refs = %u; actual_dpb_size = %u\n",
+	dev_info(core->dev, "max_refs = %u; actual_dpb_size = %u\n",
 		h264->max_refs, sess->num_dst_bufs);
 
 	/* Align to a multiple of 4 macroblocks */
@@ -349,7 +349,7 @@ static void codec_h264_src_change(struct amvdec_session *sess)
 	frame_width = h264->mb_width * 16 - crop_right;
 	frame_height = h264->mb_height * 16 - crop_bottom;
 
-	dev_dbg(core->dev, "frame: %ux%u; crop: %u %u\n",
+	dev_info(core->dev, "frame: %ux%u; crop: %u %u\n",
 		frame_width, frame_height, crop_right, crop_bottom);
 
 	codec_h264_set_par(sess);
@@ -402,7 +402,7 @@ static void codec_h264_frames_ready(struct amvdec_session *sess, u32 status)
 		 * Typical reason is a temporarily corrupted bitstream
 		 */
 		if (frame_status & ERROR_FLAG)
-			dev_dbg(core->dev, "Buffer %d decode error\n",
+			dev_info(core->dev, "Buffer %d decode error\n",
 				buffer_index);
 
 		if (pic_struct == PIC_TOP_BOT)
