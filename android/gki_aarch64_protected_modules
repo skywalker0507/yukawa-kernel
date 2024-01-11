@@ -1,5 +1,4 @@
 arch/arm64/geniezone/gzvm.ko
-drivers/bluetooth/btqca.ko
 drivers/net/can/dev/can-dev.ko
 drivers/net/can/slcan/slcan.ko
 drivers/net/can/vcan.ko

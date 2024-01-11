@@ -49,7 +49,6 @@ cdc_ncm_unbind
 close_candev
 free_candev
 generic_mii_ioctl
-h4_recv_buf
 hidp_hid_driver
 ieee802154_alloc_hw
 ieee802154_configure_durations
@@ -124,11 +123,6 @@ ppp_unregister_compressor
 pppox_compat_ioctl
 pppox_ioctl
 pppox_unbind_sock
-qca_read_soc_version
-qca_send_pre_shutdown_cmd
-qca_set_bdaddr
-qca_set_bdaddr_rome
-qca_uart_setup
 register_candev
 register_pppox_proto
 rtl8152_get_version
